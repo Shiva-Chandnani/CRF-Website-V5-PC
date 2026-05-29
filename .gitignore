@@ -2,3 +2,7 @@ node_modules/
 temporary screenshots/
 .DS_Store
 .claude/
+.env
+.env.local
+.env.*.local
+.worktrees/
