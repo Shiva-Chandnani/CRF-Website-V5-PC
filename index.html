@@ -6,7 +6,7 @@
 <title>Country Road Fashions — Bespoke Tailoring Since 1951</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Raleway:wght@200;300;400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Raleway:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
   /* ================================================
      COUNTRY ROAD FASHIONS — landing page (placeholders)
@@ -137,6 +137,7 @@
     justify-content: center;
     padding: 0 4px;
   }
+  .cart-count[hidden] { display: none; }
 
   /* ============== HERO ============== */
   .hero {
@@ -276,6 +277,7 @@
     width: 100%; height: 100%; object-fit: cover;
     transition: transform .8s ease;
   }
+  .tile img.tile-img--suit { object-position: center 8%; }
   .tile:hover img { transform: scale(1.03); }
   .tile-content {
     position: absolute;
@@ -653,15 +655,14 @@
     border-bottom: 1px solid var(--color-stroke-light);
   }
   .footer-brand .footer-logo-img {
-    width: 64px;
-    height: auto;
-    margin-bottom: 14px;
+    width: 104px;
+    height: 104px;
+    object-fit: contain;
+    margin-bottom: 18px;
     display: block;
-    /* Logo is white-on-transparent, so render on a dark badge */
-    padding: 8px;
+    padding: 12px;
     background: var(--color-jet);
-    border-radius: 50%;
-    box-sizing: content-box;
+    box-sizing: border-box;
   }
   .footer-brand .footer-wordmark {
     font-family: var(--font-serif);
@@ -755,6 +756,8 @@
     .editorial-title { font-size: 52px; }
   }
 </style>
+<link rel="stylesheet" href="css/mega-menu.css?v=2" />
+<script src="js/mega-menu.js?v=2" defer></script>
 </head>
 <body>
 
@@ -769,7 +772,7 @@
   <div class="header-inner">
     <nav class="nav-left">
       <a href="#">Shop</a>
-      <a href="#">Bespoke</a>
+      <a href="in-store.html">In-Store</a>
       <a href="#">Trunk Shows</a>
     </nav>
     <a href="#" class="brand-wordmark">Country Road Fashions</a>
@@ -780,10 +783,10 @@
       <button class="icon-btn" aria-label="Account">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
       </button>
-      <button class="icon-btn cart-btn" aria-label="Cart">
+      <a href="cart.html" class="icon-btn cart-btn" aria-label="Cart">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 7h14l-1.5 12h-11Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg>
-        <span class="cart-count">0</span>
-      </button>
+        <span class="cart-count" data-cart-count hidden>0</span>
+      </a>
     </div>
   </div>
 </header>
@@ -802,7 +805,7 @@
     <p class="hero-eyebrow">Bespoke Since 1951</p>
     <h1 class="hero-title">The Art of <em>Perfect Fit</em></h1>
     <div class="hero-actions">
-      <a href="#" class="btn btn-light">Book a Visit</a>
+      <a href="book-appointment.html" class="btn btn-light">Book a Visit</a>
       <a href="#" class="btn btn-outline-light">Custom Made</a>
     </div>
   </div>
@@ -811,7 +814,7 @@
 <!-- ============== CATEGORY TILES ============== -->
 <section class="category-tiles">
   <a href="#" class="tile">
-    <img src="https://placehold.co/1200x1100/2C2E33/2C2E33" alt="Bespoke suits" />
+    <img class="tile-img--suit" src="https://fzgsogdceptjvuahukbn.supabase.co/storage/v1/object/public/crf-products/hero/formal-suit-2-piece__cavani-wool/01.png" alt="Cavani wool bespoke suit" />
     <div class="tile-content">
       <p class="tile-eyebrow">Discover</p>
       <h3 class="tile-title">Bespoke Suits</h3>
@@ -1007,7 +1010,7 @@
 <footer class="site-footer">
   <div class="footer-grid">
     <div class="footer-brand">
-      <img class="footer-logo-img" src="brand_assets/CRF Logo.png" alt="Country Road Fashions" />
+      <img class="footer-logo-img" src="brand_assets/crf-logo.png" alt="Country Road Fashions" />
       <p class="footer-wordmark">Country Road Fashions</p>
       <p class="brand-line">Bespoke since 1951.<br/>Bangkok, Thailand.</p>
       <div class="footer-newsletter">
@@ -1090,6 +1093,8 @@
     sync();
   })();
 </script>
+
+<script type="module" src="js/cart.js"></script>
 
 </body>
 </html>

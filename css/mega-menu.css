@@ -1,0 +1,334 @@
+/* ================================================
+   COUNTRY ROAD FASHIONS — Shop mega menu
+   Refined editorial dropdown. Inherits brand
+   tokens from each page's :root (--color-jet,
+   --color-stone, --font-serif, etc.).
+   ================================================ */
+
+:root {
+  --mega-shadow: 0 1px 0 rgba(14,15,17,0.04),
+                 0 18px 40px -22px rgba(14,15,17,0.22),
+                 0 2px 6px rgba(14,15,17,0.04);
+  --mega-anim: 220ms cubic-bezier(.2,.65,.25,1);
+}
+
+/* ============== NAV-LEFT HOVER BOLD ============== */
+/* Every .nav-left link goes bold on hover. The Shop trigger also stays
+   bold while its mega menu is open. The pseudo-element reserves the
+   bold width so siblings don't shift when the weight changes. */
+.nav-left a[data-nav-bold] {
+  position: relative;
+  transition: font-weight 0s, color .2s ease;
+}
+.nav-left a[data-nav-bold]::after {
+  content: attr(data-nav-label);
+  display: block;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  font-weight: 600;
+  pointer-events: none;
+}
+.nav-left a[data-nav-bold]:hover,
+.nav-left a[data-mega-trigger][aria-expanded="true"] {
+  font-weight: 600;
+  color: var(--color-jet);
+}
+
+/* ============== ROOT PANEL ============== */
+.mega-menu {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 100px;                 /* JS overrides with actual header bottom */
+  max-height: 75vh;           /* JS refines based on header bottom */
+  overflow: hidden;           /* no scroll — content sized to always fit */
+  z-index: 49;                /* under sticky header (z 50), above page */
+  background: #fff;
+  border-top: 1px solid var(--color-stroke-light);
+  box-shadow: var(--mega-shadow);
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity var(--mega-anim),
+              transform var(--mega-anim),
+              visibility 0s linear var(--mega-anim);
+}
+.mega-menu[data-open="true"] {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  visibility: visible;
+  transition: opacity var(--mega-anim),
+              transform var(--mega-anim),
+              visibility 0s linear 0s;
+}
+
+/* Subtle paper-grain overlay — gives the panel a quiet material feel */
+.mega-menu::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mix-blend-mode: multiply;
+}
+
+.mega-inner {
+  position: relative;
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 22px 28px 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  column-gap: 36px;
+  align-items: start;
+}
+
+/* ============== CATEGORIES AREA ============== */
+.mega-categories {
+  min-width: 0;
+}
+
+/* Search bar */
+.mega-search {
+  position: relative;
+  margin-bottom: 22px;
+}
+.mega-search input {
+  width: 100%;
+  height: 38px;
+  padding: 0 40px 0 16px;
+  border: 0;
+  background: var(--color-off-white);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 300;
+  letter-spacing: 0.2px;
+  color: var(--color-charcoal);
+  outline: none;
+  transition: background 180ms ease, box-shadow 180ms ease;
+}
+.mega-search input::placeholder {
+  color: var(--color-grey-mid);
+  letter-spacing: 0.4px;
+}
+.mega-search input:focus-visible {
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--color-jet);
+}
+.mega-search .mega-search-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  color: var(--color-grey-dark);
+  pointer-events: none;
+}
+
+/* 5-column grid of sections */
+.mega-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  column-gap: 24px;
+  row-gap: 22px;
+}
+
+.mega-section + .mega-section {
+  margin-top: 20px;
+}
+
+.mega-section h4 {
+  margin: 0 0 10px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13.5px;
+  letter-spacing: 0.1px;
+  color: var(--color-jet);
+}
+.mega-section-link { font-weight: inherit; }
+/* Heading link — must override .mega-section a (used by sub-items). */
+.mega-section h4 a.mega-section-link {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13.5px;
+  letter-spacing: 0.1px;
+  color: var(--color-jet);
+  padding-bottom: 1px;
+  transition: color 180ms ease;
+}
+.mega-section h4 a.mega-section-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 0;
+  height: 1px;
+  background: var(--color-stone);
+  transition: width 220ms cubic-bezier(.2,.65,.25,1);
+}
+.mega-section h4 a.mega-section-link:hover,
+.mega-section h4 a.mega-section-link:focus-visible {
+  outline: none;
+  color: var(--color-jet);
+}
+.mega-section h4 a.mega-section-link:hover::after,
+.mega-section h4 a.mega-section-link:focus-visible::after {
+  width: 100%;
+}
+
+.mega-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.mega-section li {
+  margin-bottom: 5px;
+  line-height: 1.35;
+}
+
+.mega-section a {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 300;
+  letter-spacing: 0.1px;
+  color: var(--color-grey-dark);
+  padding-bottom: 1px;
+  transition: color 180ms ease;
+}
+
+/* Hairline stone underline — animates in from the left.
+   Echoes the brand pattern (italic word with hairline accent). */
+.mega-section a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: auto;
+  bottom: -1px;
+  width: 0;
+  height: 1px;
+  background: var(--color-stone);
+  transition: width 220ms cubic-bezier(.2,.65,.25,1);
+}
+.mega-section a:hover,
+.mega-section a:focus-visible {
+  color: var(--color-jet);
+  outline: none;
+}
+.mega-section a:hover::after,
+.mega-section a:focus-visible::after {
+  width: 100%;
+}
+
+/* ============== FEATURED SIDEBAR ============== */
+.mega-featured {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  row-gap: 8px;
+}
+
+.mega-featured-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 8px;
+}
+
+.mega-tile {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--color-jet);
+}
+.mega-tile-image {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-grey-light);
+}
+.mega-tile.is-large .mega-tile-image { aspect-ratio: 16 / 11; }
+.mega-tile.is-small .mega-tile-image { aspect-ratio: 1 / 1; }
+
+.mega-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 700ms cubic-bezier(.2,.65,.25,1);
+}
+.mega-tile:hover img { transform: scale(1.04); }
+
+/* Caption below the image — matches reference layout */
+.mega-tile-caption {
+  margin-top: 7px;
+}
+
+.mega-tile-eyebrow {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--color-grey-mid);
+  margin: 0 0 3px;
+}
+.mega-tile-title {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 11.5px;
+  letter-spacing: 0.1px;
+  color: var(--color-jet);
+  line-height: 1.25;
+  margin: 0;
+  transition: color 180ms ease;
+}
+.mega-tile.is-large .mega-tile-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-style: italic;
+  font-size: 15px;
+  letter-spacing: -0.1px;
+}
+.mega-tile:hover .mega-tile-title { color: var(--color-charcoal); }
+
+/* Stone hairline under the large tile's title — brand signature accent */
+.mega-tile.is-large .mega-tile-title::after {
+  content: "";
+  display: block;
+  width: 22px;
+  height: 1px;
+  background: var(--color-stone);
+  margin-top: 4px;
+}
+
+/* ============== MOBILE ============== */
+@media (max-width: 900px) {
+  .mega-menu { display: none !important; }
+}
+
+/* Slightly tighter padding on smaller desktop widths */
+@media (max-width: 1200px) {
+  .mega-inner {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    column-gap: 32px;
+  }
+  .mega-grid { column-gap: 22px; }
+  .mega-tile.is-large .mega-tile-title { font-size: 22px; }
+}
+
+/* Honour reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .mega-menu,
+  .mega-section a::after,
+  .mega-tile img {
+    transition: none !important;
+  }
+}

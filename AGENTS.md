@@ -1,4 +1,4 @@
-# CLAUDE.md — Frontend Website Rules
+# AGENTS.md — Frontend Website Rules
 
 ## Always Do First
 - **Read [PROJECT.md](PROJECT.md) at the start of every session** — it documents the current state of the Supabase catalogue, the Postgres connection workflow (use `scripts/run-sql.mjs` for migrations, not manual SQL Editor pastes), the file layout, and recent design decisions. The credentials are in `.env.local` (gitignored).
@@ -22,7 +22,7 @@
 - Screenshots are saved automatically to `./temporary screenshots/screenshot-N.png` (auto-incremented, never overwritten).
 - Optional label suffix: `node screenshot.mjs http://localhost:3000 label` → saves as `screenshot-N-label.png`
 - `screenshot.mjs` lives in the project root. Use it as-is.
-- After screenshotting, read the PNG from `temporary screenshots/` with the Read tool — Claude can see and analyze the image directly.
+- After screenshotting, read the PNG from `temporary screenshots/` with the Read tool — Codex can see and analyze the image directly.
 - When comparing, be specific: "heading is 32px but reference shows ~24px", "card gap is 16px but should be 24px"
 - Check: spacing/padding, font size/weight/line-height, colors (exact hex), alignment, border-radius, shadows, image sizing
 
