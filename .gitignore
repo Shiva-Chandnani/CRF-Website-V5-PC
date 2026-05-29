@@ -6,3 +6,7 @@ temporary screenshots/
 .env.local
 .env.*.local
 .worktrees/
+
+# Source-photo directories — uploaded to Supabase Storage; not needed at runtime.
+Cavani Designs/
+Vitale Barberis Canonico/
