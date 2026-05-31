@@ -322,6 +322,42 @@ A **phase** is a sequence of these units. Phase ends when all its features are m
 6. PROJECT.md updated with Phase 0 shipped inventory.
 7. Committed to main with a clear "Phase 0: shared layout + design system lock" commit.
 
+### Phase 0 — shipped 2026-05-30
+
+Shared spine landed. Every existing page now mounts `components/header.html` + `components/footer.html` at runtime via `js/layout.js`. `css/base.css` owns the token vocabulary, `.btn--*` system, form controls, header styles, and footer styles. Newsletter capture writes to `newsletter_subscribers` via `js/newsletter.js`.
+
+**New files:**
+- `components/header.html`, `components/footer.html` — canonical header + full footer markup
+- `css/base.css` — tokens (color/type/spacing/shadow/motion), reset, typography ramp, `.btn--*`, form controls, `.sr-only`, focus-visible (jet on light, stone on dark surfaces), header styles, footer styles, newsletter form styles, responsive collapse
+- `js/layout.js` — fetches both components in parallel via `Promise.allSettled` (fires `crf:layout-ready` if at least one slot populates), decorates `[data-nav]` links with `aria-current="page"` based on `location.pathname + location.hash`, clears the FOUC reservation styling
+- `js/meta.js` — `setMeta()` no-op skeleton (Phase 3 wires the real `<title>`/meta tags/JSON-LD)
+- `js/newsletter.js` — footer form handler. Uses plain `.insert()` and treats Postgres `23505` (unique violation) as idempotent success so re-submission is a no-op (preserves the original `opted_in_at`)
+- `db/07_newsletter_subscribers.sql` — `(email pk, profile_id nullable, source, opted_in_at, unsubscribed_at, created_at)`. RLS: anon INSERT only, NO anon UPDATE (prevents mass-mutation), authenticated owners can SELECT their own row
+- `scripts/test-layout-mount.mjs`, `scripts/test-newsletter-submit.mjs`, `scripts/test-token-discipline.mjs`
+- `scripts/capture-phase-0-baseline.mjs`, `scripts/capture-phase-0-after.mjs` — visual-gate screenshot capture
+- `favicon.ico` — 1×1 transparent (silences browser auto-request 404 in console)
+
+**Behavior changes across all 6 pages:**
+- Footer is now the canonical full footer (brand + newsletter + 4 link cols + bottom row) on every page. `shop.html`, `product.html`, `cart.html` gained the full footer (previously thin / mid).
+- `.btn-primary` and `.btn-dark` collapsed into `.btn--primary`. `.btn-outline*` → `.btn--ghost*`. `.btn-light` → `.btn--light`. All buttons get `transform`-only hover (no `transition: all`).
+- All hardcoded `#000` / `#fff` literals replaced with token references (enforced by `scripts/test-token-discipline.mjs`).
+- `:focus-visible` outlines added across all interactive elements (a11y baseline). Default ring uses `var(--color-jet)` on light surfaces; `.site-header :focus-visible` and `.site-footer :focus-visible` use `var(--color-stone)` for contrast on dark backgrounds.
+- `--color-cream` aligned to `#FBF9F6` everywhere (was `#F7F2EA` in base.css, `#FBF9F6` in shop/product/cart inline overrides).
+- `--color-charcoal` aligned to `#1A1B1F` everywhere (shop.html previously had `#2C2E33` divergent override).
+- Mobile (375px) header collapses to single-line "Country Road Fashions" wordmark (was 3-line stacked on shop/product/cart/book/in-store before).
+- `js/cart.js` defers `mountCartBadge()` until the `crf:layout-ready` event when `[data-cart-count]` isn't in DOM yet.
+
+**Phase 1 hooks waiting:**
+- Header Account icon is an `<a href="login.html" data-account-link>` — Phase 1's `js/auth.js` flips href to `account.html` when signed in.
+- Footer bottom-row Privacy link points to `privacy.html` — Phase 1 creates that page.
+- `js/meta.js` `setMeta()` is a no-op — Phase 3 fills it.
+- `newsletter_subscribers.profile_id` is nullable; Phase 1 backfills it when a signup uses an already-captured email.
+
+**Architectural notes for later phases:**
+- The CSP meta tag was NOT added in Phase 0 (deferred to Phase 3 hardening per spec). Phase 3 should add it to `components/header.html` since `<meta http-equiv="Content-Security-Policy">` in a fetched HTML fragment IS honored by browsers if it appears before any external resource loads, but it's safer to add it directly to each page's `<head>` until Phase 3.
+- The `<form data-newsletter-form>` is bound by `js/newsletter.js` exactly once via a `data-newsletter-bound="1"` guard. If a future feature re-renders the footer dynamically, the guard prevents double-binding but doesn't re-bind a fresh form node — call `js/newsletter.js`'s `init()` after such a re-render.
+- The mobile mega-menu (`js/mega-menu.js` + `css/mega-menu.css`) lives separately, used on 5 of 6 pages, unchanged in Phase 0.
+
 ### Phase 1 — Spec carryover (for reference; execute after Phase 0)
 
 **Goal:** customer accounts + measurements schema + privacy baseline.
