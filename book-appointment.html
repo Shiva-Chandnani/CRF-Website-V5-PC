@@ -7,6 +7,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Raleway:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="preload" as="fetch" href="/components/header.html" crossorigin>
+<link rel="preload" as="fetch" href="/components/footer.html" crossorigin>
+<link rel="stylesheet" href="/css/base.css">
+<style>
+  /* FOUC tokens for data-layout slot reservations */
+  :root { --color-jet:#0E0F11; --color-charcoal:#1A1B1F; }
+</style>
+<script type="module" src="/js/layout.js"></script>
+<script type="module" src="/js/newsletter.js"></script>
+<script type="module" src="/js/meta.js"></script>
 
 <!-- =====================================================
      CALENDLY — Uncomment when you connect Calendly later.
@@ -18,98 +28,25 @@
 -->
 
 <style>
-  /* ================================================
-     COUNTRY ROAD FASHIONS — Book Appointment Page
-     ================================================ */
+  /* ============== PAGE-SPECIFIC TOKENS ============== */
   :root {
-    --font-sans: 'Raleway', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    --font-serif: 'Cormorant Garamond', Georgia, serif;
-    --line-height-body: 1.65;
-    --color-jet:        #0E0F11;
-    --color-charcoal:   #2C2E33;
     --color-graphite:   #3A3D44;
     --color-grey-dark:  #4F5258;
     --color-grey-mid:   #898C92;
     --color-grey-light: #DFDFDF;
-    --color-stone:      #B6ADA5;
-    --color-off-white:  #F7F5F2;
-    --color-white:      #FFFFFF;
     --color-stroke-light: rgba(14,15,17,0.10);
-    --header-height: 64px;
     --announcement-height: 36px;
   }
-  *, *::before, *::after { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body {
-    margin: 0;
-    font-family: var(--font-sans);
-    font-weight: 300;
-    font-size: 14px;
-    line-height: var(--line-height-body);
-    color: var(--color-charcoal);
-    background: var(--color-white);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  img { max-width: 100%; display: block; }
-  a { color: inherit; text-decoration: none; }
-  button { font-family: inherit; cursor: pointer; }
 
   /* ============== ANNOUNCEMENT BAR ============== */
   .announcement {
     background: var(--color-jet);
-    color: #fff;
+    color: var(--color-white);
     height: var(--announcement-height);
     display: flex; align-items: center; justify-content: center;
     font-size: 12px; letter-spacing: 0.5px;
   }
   .announcement a { text-decoration: underline; text-underline-offset: 3px; margin-left: 6px; }
-
-  /* ============== HEADER ============== */
-  .site-header {
-    position: sticky; top: 0; z-index: 50;
-    background: #fff;
-    border-bottom: 1px solid var(--color-stroke-light);
-    height: var(--header-height);
-  }
-  .header-inner {
-    height: 100%;
-    padding: 0 28px;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-  }
-  .nav-left { display: flex; gap: 28px; }
-  .nav-left a {
-    font-size: 11.5px;
-    text-transform: uppercase;
-    letter-spacing: 1.4px;
-    color: var(--color-charcoal);
-    transition: color .2s ease;
-  }
-  .nav-left a:hover,
-  .nav-left a.active { color: var(--color-jet); border-bottom: 1px solid var(--color-jet); padding-bottom: 2px; }
-  .brand-wordmark {
-    text-align: center;
-    font-family: var(--font-serif);
-    font-weight: 500;
-    font-size: 22px;
-    color: var(--color-jet);
-    line-height: 1;
-  }
-  .nav-right { display: flex; justify-content: flex-end; gap: 22px; align-items: center; }
-  .icon-btn { background: none; border: 0; padding: 0; color: var(--color-jet); display: inline-flex; align-items: center; }
-  .icon-btn svg { width: 18px; height: 18px; }
-  .cart-btn { position: relative; }
-  .cart-count {
-    position: absolute; top: -6px; right: -8px;
-    background: var(--color-jet); color: #fff;
-    font-size: 9px; border-radius: 999px;
-    min-width: 14px; height: 14px;
-    display: inline-flex; align-items: center; justify-content: center;
-    padding: 0 4px;
-  }
-  .cart-count[hidden] { display: none; }
 
   /* ============== PAGE INTRO ============== */
   .book-intro {
@@ -181,11 +118,11 @@
   }
   .tab[aria-selected="true"] {
     background: var(--color-jet);
-    color: #fff;
+    color: var(--color-white);
   }
   .tab[aria-selected="true"] .tab-eyebrow { color: rgba(255,255,255,0.75); }
-  .tab[aria-selected="true"] .tab-title { color: #fff; }
-  .tab:hover:not([aria-selected="true"]) { background: #fff; }
+  .tab[aria-selected="true"] .tab-title { color: var(--color-white); }
+  .tab:hover:not([aria-selected="true"]) { background: var(--color-white); }
 
   /* ============== PANELS ============== */
   .panels {
@@ -267,7 +204,7 @@
     display: inline-block;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 12px;
-    background: #fff;
+    background: var(--color-white);
     color: var(--color-charcoal);
     padding: 4px 8px;
     border: 1px solid var(--color-stroke-light);
@@ -280,7 +217,7 @@
   }
   /* When you paste the Calendly embed (so .calendly-embed is no longer empty),
      the embed fills the stage and the placeholder hides automatically. */
-  .calendly-embed:not(:empty) { position: absolute; inset: 0; background: #fff; min-height: 720px; }
+  .calendly-embed:not(:empty) { position: absolute; inset: 0; background: var(--color-white); min-height: 720px; }
   .calendly-embed:not(:empty) ~ .calendly-placeholder { display: none; }
 
   /* ============== WHAT TO EXPECT ============== */
@@ -327,89 +264,12 @@
     margin: 0;
   }
 
-  /* ============== FOOTER ============== */
-  .site-footer {
-    border-top: 1px solid var(--color-stroke-light);
-    background: #fff;
-    padding: 56px 28px 28px;
-  }
-  .footer-grid {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr 1fr;
-    gap: 40px;
-    padding-bottom: 40px;
-    border-bottom: 1px solid var(--color-stroke-light);
-    max-width: 1380px;
-    margin: 0 auto;
-  }
-  .footer-brand .footer-logo-img {
-    width: 104px; height: 104px;
-    object-fit: contain;
-    margin-bottom: 18px;
-    display: block;
-    padding: 12px;
-    background: var(--color-jet);
-    box-sizing: border-box;
-  }
-  .footer-wordmark {
-    font-family: var(--font-serif);
-    font-weight: 500;
-    font-size: 22px;
-    color: var(--color-jet);
-    margin: 0 0 6px;
-  }
-  .brand-line {
-    font-size: 12.5px;
-    color: var(--color-grey-dark);
-    margin: 0 0 28px;
-    line-height: 1.5;
-  }
-  .footer-newsletter h5 { margin: 0 0 6px; font-size: 12.5px; color: var(--color-jet); font-weight: 400; }
-  .footer-newsletter p { margin: 0 0 10px; font-size: 11.5px; color: var(--color-grey-mid); }
-  .newsletter-form { display: flex; border: 1px solid var(--color-jet); max-width: 320px; }
-  .newsletter-form input { flex: 1; border: 0; padding: 8px 12px; font-size: 13px; font-family: inherit; background: transparent; outline: none; }
-  .newsletter-form button { background: var(--color-jet); color: #fff; border: 0; padding: 0 14px; font-size: 14px; }
-  .footer-col h4 {
-    font-size: 11px;
-    letter-spacing: 1.4px;
-    text-transform: uppercase;
-    color: var(--color-jet);
-    margin: 0 0 14px;
-    font-weight: 400;
-  }
-  .footer-col ul { list-style: none; padding: 0; margin: 0; }
-  .footer-col li { margin-bottom: 8px; font-size: 12.5px; color: var(--color-grey-dark); }
-  .footer-col a:hover { color: var(--color-jet); }
-  .footer-bottom {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 22px;
-    font-size: 11.5px;
-    color: var(--color-grey-mid);
-    max-width: 1380px;
-    margin: 0 auto;
-  }
-  .footer-bottom .links a { margin-right: 16px; }
-  .currency-select {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid var(--color-stroke-light);
-    padding: 6px 10px;
-    font-size: 11.5px;
-    color: var(--color-grey-dark);
-  }
-
   /* ============== RESPONSIVE ============== */
   @media (max-width: 900px) {
-    .header-inner { padding: 0 16px; }
-    .nav-left { gap: 18px; }
     .panel-meta, .expect-grid { grid-template-columns: 1fr; }
     .tabs { grid-template-columns: 1fr; }
     .tab { border-right: 0; border-bottom: 1px solid var(--color-stroke-light); }
     .tab:last-child { border-bottom: 0; }
-    .footer-grid { grid-template-columns: 1fr 1fr; }
   }
 </style>
 <link rel="stylesheet" href="css/mega-menu.css?v=2" />
@@ -423,29 +283,7 @@
   <a href="#">Book a Visit</a>
 </div>
 
-<!-- ============== HEADER ============== -->
-<header class="site-header">
-  <div class="header-inner">
-    <nav class="nav-left">
-      <a href="index.html">Shop</a>
-      <a href="in-store.html" class="active">In-Store</a>
-      <a href="#">Trunk Shows</a>
-    </nav>
-    <a href="index.html" class="brand-wordmark">Country Road Fashions</a>
-    <div class="nav-right">
-      <button class="icon-btn" aria-label="Search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
-      </button>
-      <button class="icon-btn" aria-label="Account">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
-      </button>
-      <a href="cart.html" class="icon-btn cart-btn" aria-label="Cart">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 7h14l-1.5 12h-11Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg>
-        <span class="cart-count" data-cart-count hidden>0</span>
-      </a>
-    </div>
-  </div>
-</header>
+<div data-layout="header" style="min-height:72px;background:var(--color-jet);"></div>
 
 <!-- ============== INTRO ============== -->
 <section class="book-intro">
@@ -565,71 +403,7 @@
   </div>
 </section>
 
-<!-- ============== FOOTER ============== -->
-<footer class="site-footer">
-  <div class="footer-grid">
-    <div class="footer-brand">
-      <img class="footer-logo-img" src="brand_assets/crf-logo.png" alt="Country Road Fashions" />
-      <p class="footer-wordmark">Country Road Fashions</p>
-      <p class="brand-line">Bespoke since 1951.<br/>Bangkok, Thailand.</p>
-      <div class="footer-newsletter">
-        <h5>Stay in touch</h5>
-        <p>Quietly delivered: trunk show dates and seasonal cloth arrivals.</p>
-        <form class="newsletter-form" onsubmit="return false;">
-          <input type="email" placeholder="Your email" />
-          <button type="submit" aria-label="Subscribe">→</button>
-        </form>
-      </div>
-    </div>
-    <div class="footer-col">
-      <h4>Bespoke</h4>
-      <ul>
-        <li><a href="#">Custom Suits</a></li>
-        <li><a href="#">Custom Shirts</a></li>
-        <li><a href="#">Tuxedos &amp; Black Tie</a></li>
-        <li><a href="#">Wedding Suits</a></li>
-        <li><a href="#">Mandarin Collar</a></li>
-        <li><a href="#">For Women</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Visit Us</h4>
-      <ul>
-        <li><a href="in-store.html">Bangkok Showroom</a></li>
-        <li><a href="in-store.html#trunk-shows">Trunk Shows</a></li>
-        <li><a href="book-appointment.html">Book a Consultation</a></li>
-        <li><a href="#">Online Measurements</a></li>
-        <li><a href="#">Worldwide Shipping</a></li>
-        <li><a href="#">Contact Us</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>House</h4>
-      <ul>
-        <li><a href="#">Our Heritage</a></li>
-        <li><a href="#">The Bespoke Process</a></li>
-        <li><a href="#">Fabric Library</a></li>
-        <li><a href="#">Press</a></li>
-        <li><a href="#">FAQs</a></li>
-        <li><a href="#">Satisfaction Promise</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="footer-bottom">
-    <div>
-      © 2026 Country Road Fashions, Bangkok.
-      <span class="links" style="margin-left:18px;">
-        <a href="#">Privacy</a>
-        <a href="#">Sitemap</a>
-        <a href="#">Accessibility</a>
-      </span>
-    </div>
-    <div class="currency-select">
-      <span>Thailand (THB)</span>
-      <span>▾</span>
-    </div>
-  </div>
-</footer>
+<div data-layout="footer" style="min-height:480px;background:var(--color-charcoal);"></div>
 
 <script>
   (function () {

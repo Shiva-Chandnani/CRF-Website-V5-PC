@@ -1,0 +1,446 @@
+/* =============================================================================
+   Country Road Fashions — base.css
+   Shared spine for every page. Token vocabulary, reset, typography ramp,
+   .btn--* system, form controls, header styles, footer styles.
+   No page-specific rules. No new colors, spacing, or animation curves —
+   everything here is extracted from what already existed across the 6 pages.
+   ============================================================================= */
+
+/* === 1. Tokens ============================================================ */
+:root {
+  /* Color */
+  --color-jet:        #0E0F11;
+  --color-charcoal:   #1A1B1F;
+  --color-stone:      #B6ADA5;
+  --color-stone-soft: #D9D2CA;
+  --color-cream:      #FBF9F6;
+  --color-off-white:  #FAF8F4;
+  --color-ink:        #2A2A2E;
+  --color-muted:      #6B6B70;
+  --color-rule:       rgba(14, 15, 17, 0.08);
+  --color-white:      #FFFFFF;
+
+  /* Type */
+  --font-serif:       "Cormorant Garamond", Georgia, serif;
+  --font-sans:        "Raleway", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --tracking-tight:   -0.03em;
+  --tracking-eyebrow: 0.18em;
+  --leading-body:     1.7;
+  --leading-tight:    1.15;
+
+  /* Spacing — intentional ramp */
+  --space-1: 4px;   --space-2: 8px;   --space-3: 12px;  --space-4: 16px;
+  --space-5: 24px;  --space-6: 32px;  --space-7: 48px;  --space-8: 72px;
+  --space-9: 96px;
+
+  /* Surface elevation */
+  --shadow-1: 0 1px 2px rgba(14,15,17,0.06), 0 1px 1px rgba(14,15,17,0.04);
+  --shadow-2: 0 4px 10px rgba(14,15,17,0.08), 0 2px 4px rgba(14,15,17,0.05);
+  --shadow-3: 0 16px 32px rgba(14,15,17,0.10), 0 4px 8px rgba(14,15,17,0.06);
+
+  /* Motion */
+  --ease-spring: cubic-bezier(0.34, 1.36, 0.64, 1); /* reserved for Phase 3 drawer animations */
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --t-fast:      140ms;
+  --t-med:       220ms;
+  --t-slow:      360ms;
+
+  /* Layout */
+  --container-max: 1440px;
+  --header-h:      72px;
+}
+
+/* === 2. Reset ============================================================= */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: var(--leading-body);
+  color: var(--color-ink);
+  background: var(--color-off-white);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+img, svg, video { display: block; max-width: 100%; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+
+/* === 3. Typography ramp =================================================== */
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.h-display {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: clamp(36px, 5vw, 72px);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-jet);
+}
+.h-section {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: clamp(28px, 3.5vw, 44px);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-jet);
+}
+.h-card {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 22px;
+  line-height: 1.3;
+  color: var(--color-jet);
+}
+.copy-body {
+  font-size: 15px;
+  line-height: var(--leading-body);
+  color: var(--color-ink);
+}
+.copy-muted {
+  font-size: 14px;
+  line-height: var(--leading-body);
+  color: var(--color-muted);
+}
+
+/* === 4. Focus visibility (a11y baseline) ================================== */
+:focus { outline: none; }
+:focus-visible {
+  /* Default ring: jet on light surfaces (~10:1 contrast on off-white/cream) */
+  outline: 2px solid var(--color-jet);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+/* Dark surfaces (header, footer) flip to stone — clears 3:1 on jet/charcoal */
+.site-header :focus-visible,
+.site-footer :focus-visible {
+  outline-color: var(--color-stone);
+}
+
+/* === 5. Buttons =========================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 12px 28px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  border: 1px solid transparent;
+  border-radius: 0;
+  cursor: pointer;
+  transition: background var(--t-med) var(--ease-out),
+              border-color var(--t-med) var(--ease-out),
+              color var(--t-med) var(--ease-out),
+              transform var(--t-fast) var(--ease-out);
+}
+.btn--primary:active,
+.btn--light:active { transform: translateY(0); }
+
+.btn--primary {
+  background: var(--color-jet);
+  color: var(--color-white);
+  border-color: var(--color-jet);
+}
+.btn--primary:hover {
+  background: var(--color-charcoal);
+  border-color: var(--color-charcoal);
+  transform: translateY(-1px);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--color-jet);
+  border-color: var(--color-jet);
+}
+.btn--ghost:hover {
+  background: var(--color-jet);
+  color: var(--color-off-white);
+}
+.btn--ghost-light {
+  background: transparent;
+  color: var(--color-off-white);
+  border-color: var(--color-off-white);
+}
+.btn--ghost-light:hover {
+  background: var(--color-off-white);
+  color: var(--color-jet);
+}
+
+.btn--light {
+  background: var(--color-off-white);
+  color: var(--color-jet);
+  border-color: var(--color-off-white);
+}
+.btn--light:hover {
+  background: var(--color-white);
+  border-color: var(--color-white);
+  transform: translateY(-1px);
+}
+
+/* === 6. Form controls ===================================================== */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-family: var(--font-sans);
+}
+.field label {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+input[type="text"].input,
+input[type="email"].input,
+input[type="tel"].input,
+input[type="search"].input,
+textarea.input,
+select.input {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  padding: 12px 14px;
+  background: var(--color-white);
+  color: var(--color-ink);
+  border: 1px solid var(--color-rule);
+  border-radius: 0;
+  transition: border-color var(--t-med) var(--ease-out);
+}
+input.input:hover, textarea.input:hover, select.input:hover { border-color: var(--color-stone); }
+input.input:focus-visible, textarea.input:focus-visible, select.input:focus-visible {
+  border-color: var(--color-jet);
+  outline-offset: 0;
+}
+input.input::placeholder { color: var(--color-muted); }
+
+/* === 6b. Visually-hidden helper =========================================== */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* === 7. Site header ======================================================= */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--color-jet);
+  color: var(--color-off-white);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.header-inner {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  height: var(--header-h);
+  padding: 0 var(--space-6);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-5);
+}
+.nav-left, .nav-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+.nav-right { justify-content: flex-end; }
+.nav-left a {
+  font-size: 12px;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-off-white);
+  transition: color var(--t-fast) var(--ease-out);
+}
+.nav-left a:hover { color: var(--color-stone); }
+.nav-left a[aria-current="page"] { color: var(--color-stone); }
+
+.brand-wordmark {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+  color: var(--color-off-white);
+  white-space: nowrap;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-off-white);
+  position: relative;
+  transition: color var(--t-fast) var(--ease-out);
+}
+.icon-btn svg { width: 20px; height: 20px; }
+.icon-btn:hover { color: var(--color-stone); }
+.cart-btn .cart-count {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--color-stone);
+  color: var(--color-jet);
+  font-size: 10px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 720px) {
+  .header-inner { grid-template-columns: auto 1fr auto; padding: 0 var(--space-4); }
+  .nav-left { display: none; }
+  .brand-wordmark { font-size: 18px; }
+}
+
+/* === 8. Site footer ======================================================= */
+.site-footer {
+  background: var(--color-charcoal);
+  color: var(--color-off-white);
+  padding: var(--space-8) var(--space-6) var(--space-5);
+}
+.footer-grid {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: var(--space-7);
+}
+.footer-brand .footer-logo-img {
+  width: 56px;
+  height: auto;
+  margin-bottom: var(--space-4);
+  filter: brightness(0) invert(1);
+}
+.footer-wordmark {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 22px;
+  margin: 0 0 var(--space-2);
+}
+.brand-line {
+  font-size: 13px;
+  color: var(--color-stone);
+  margin: 0 0 var(--space-5);
+}
+.footer-col h4, .footer-newsletter h5 {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-stone);
+  margin: 0 0 var(--space-3);
+}
+.footer-col ul { display: flex; flex-direction: column; gap: var(--space-2); }
+.footer-col a {
+  font-size: 13px;
+  color: var(--color-off-white);
+  transition: color var(--t-fast) var(--ease-out);
+}
+.footer-col a:hover { color: var(--color-stone); }
+
+.footer-newsletter p {
+  font-size: 13px;
+  color: var(--color-stone-soft);
+  margin: 0 0 var(--space-3);
+}
+.newsletter-form {
+  display: flex;
+  align-items: stretch;
+  max-width: 320px;
+  border: 1px solid rgba(255,255,255,0.16);
+}
+.newsletter-form input {
+  flex: 1;
+  background: transparent;
+  color: var(--color-off-white);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  padding: 10px 12px;
+  border: 0;
+  outline: none;
+}
+.newsletter-form input::placeholder { color: var(--color-stone); }
+.newsletter-form button {
+  padding: 0 16px;
+  color: var(--color-off-white);
+  font-size: 18px;
+  line-height: 1;
+  transition: background var(--t-fast) var(--ease-out);
+}
+.newsletter-form button:hover { background: rgba(255,255,255,0.06); }
+.newsletter-form button[aria-busy="true"] {
+  opacity: 0.6;
+  cursor: progress;
+}
+.newsletter-success {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--color-stone);
+  margin: var(--space-3) 0 0;
+  min-height: 64px;
+}
+.newsletter-error {
+  font-size: 12px;
+  color: var(--color-stone-soft);
+  margin: var(--space-2) 0 0;
+}
+
+.footer-bottom {
+  max-width: var(--container-max);
+  margin: var(--space-7) auto 0;
+  padding-top: var(--space-5);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--color-stone);
+}
+.footer-bottom .links a {
+  color: var(--color-stone);
+  margin-right: var(--space-4);
+  transition: color var(--t-fast) var(--ease-out);
+}
+.footer-bottom .links a:hover { color: var(--color-off-white); }
+
+.currency-select {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 12px;
+  color: var(--color-stone);
+}
+.currency-select:hover { color: var(--color-off-white); }
+
+@media (max-width: 900px) {
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: var(--space-6); }
+}
+@media (max-width: 540px) {
+  .footer-grid { grid-template-columns: 1fr; }
+  .footer-bottom { flex-direction: column; gap: var(--space-3); align-items: flex-start; }
+}

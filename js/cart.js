@@ -101,8 +101,10 @@ export function subtotal() {
 // element with [data-cart-count] and keeps its textContent in sync.
 // -----------------------------------------------------------------------------
 export function mountCartBadge() {
+  if (mountCartBadge._mounted) return;
   const els = document.querySelectorAll('[data-cart-count]');
   if (!els.length) return;
+  mountCartBadge._mounted = true;
   const update = () => {
     const n = lineCount();
     els.forEach(el => {
@@ -118,9 +120,20 @@ export function mountCartBadge() {
   });
 }
 
-// Auto-mount on DOMContentLoaded so callers don't have to.
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', mountCartBadge);
-} else {
-  mountCartBadge();
+// Auto-mount: try immediately; if the badge isn't in the DOM yet (shared
+// header injected by js/layout.js at runtime), wait for crf:layout-ready.
+// Also keep a DOMContentLoaded fallback for any defensive page that has
+// the inline header during a transition. tryMount() is idempotent.
+function tryMount() {
+  if (document.querySelector('[data-cart-count]')) {
+    mountCartBadge();
+    return true;
+  }
+  return false;
+}
+if (!tryMount()) {
+  document.addEventListener('crf:layout-ready', tryMount, { once: true });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', tryMount, { once: true });
+  }
 }

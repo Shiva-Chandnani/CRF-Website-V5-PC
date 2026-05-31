@@ -7,6 +7,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Raleway:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="preload" as="fetch" href="/components/header.html" crossorigin>
+<link rel="preload" as="fetch" href="/components/footer.html" crossorigin>
+<link rel="stylesheet" href="/css/base.css">
+<style>
+  /* FOUC tokens for data-layout slot reservations */
+  :root { --color-jet:#0E0F11; --color-charcoal:#1A1B1F; }
+</style>
+<script type="module" src="/js/layout.js"></script>
+<script type="module" src="/js/newsletter.js"></script>
+<script type="module" src="/js/meta.js"></script>
 <style>
   :root {
     --font-sans: 'Raleway', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -14,7 +24,7 @@
     --type--caps-tracking: 1.6px;
     --line-height-body: 1.65;
     --color-jet:        #0E0F11;
-    --color-charcoal:   #2C2E33;
+    --color-charcoal:   #1A1B1F;
     --color-navy:       #1F2A3D;
     --color-graphite:   #3A3D44;
     --color-grey-dark:  #4F5258;
@@ -53,51 +63,11 @@
 
   /* ============== ANNOUNCEMENT + HEADER (matched to index.html) ============== */
   .announcement {
-    background: #000; color: #fff; height: var(--announcement-height);
+    background: var(--color-jet); color: var(--color-white); height: var(--announcement-height);
     display: flex; align-items: center; justify-content: center;
     font-size: 12px; letter-spacing: 0.5px;
   }
   .announcement a { text-decoration: underline; text-underline-offset: 3px; margin-left: 6px; }
-
-  .site-header {
-    position: sticky; top: 0; z-index: 50;
-    background: #fff;
-    border-bottom: 1px solid var(--color-stroke-light);
-    height: var(--header-height);
-  }
-  .header-inner {
-    height: 100%; padding: 0 28px;
-    display: grid; grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-  }
-  .nav-left { display: flex; gap: 28px; }
-  .nav-left a {
-    font-size: 11.5px; text-transform: uppercase;
-    letter-spacing: 1.4px; color: var(--color-charcoal);
-    transition: color .2s ease;
-  }
-  .nav-left a:hover, .nav-left a.is-active { color: var(--color-jet); }
-  .nav-left a.is-active { position: relative; }
-  .nav-left a.is-active::after {
-    content: ""; position: absolute; left: 0; right: 0; bottom: -4px;
-    height: 1px; background: var(--color-jet);
-  }
-  .brand-wordmark {
-    text-align: center; font-family: var(--font-serif);
-    font-weight: 500; font-size: 22px; color: var(--color-jet);
-    line-height: 1; letter-spacing: 0;
-  }
-  .nav-right { display: flex; justify-content: flex-end; gap: 22px; align-items: center; }
-  .icon-btn { background: none; border: 0; padding: 0; color: #000; display: inline-flex; align-items: center; }
-  .icon-btn svg { width: 18px; height: 18px; }
-  .cart-btn { position: relative; }
-  .cart-count {
-    position: absolute; top: -6px; right: -8px;
-    background: #000; color: #fff; font-size: 9px;
-    border-radius: 999px; min-width: 14px; height: 14px;
-    display: inline-flex; align-items: center; justify-content: center; padding: 0 4px;
-  }
-  .cart-count[hidden] { display: none; }
 
   /* ============== SHOP HEADER (page title + filter bar) ============== */
   .shop-hero {
@@ -434,22 +404,6 @@
   .skeleton .price { width: 25%; height: 12px; }
   @keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
 
-  /* ============== FOOTER ============== */
-  .site-footer {
-    border-top: 1px solid var(--color-stroke-light);
-    padding: 36px var(--page-pad-x) 28px;
-    background: var(--color-cream);
-    font-size: 11.5px;
-    color: var(--color-grey-mid);
-    display: flex; justify-content: space-between; align-items: center;
-    gap: 24px; flex-wrap: wrap;
-  }
-  .site-footer .signature {
-    font-family: var(--font-serif); font-style: italic; font-size: 15px; color: var(--color-charcoal);
-  }
-  .site-footer a:hover { color: var(--color-jet); }
-  .site-footer .links a { margin-right: 16px; }
-
   /* ============== RESPONSIVE ============== */
   @media (max-width: 1100px) {
     :root { --sidebar-width: 200px; --content-gap: 36px; }
@@ -475,29 +429,7 @@
   <a href="book-appointment.html">Book a Visit</a>
 </div>
 
-<!-- ============== HEADER ============== -->
-<header class="site-header">
-  <div class="header-inner">
-    <nav class="nav-left">
-      <a href="shop.html" class="is-active">Shop</a>
-      <a href="in-store.html">In-Store</a>
-      <a href="#">Trunk Shows</a>
-    </nav>
-    <a href="index.html" class="brand-wordmark">Country Road Fashions</a>
-    <div class="nav-right">
-      <button class="icon-btn" aria-label="Search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
-      </button>
-      <button class="icon-btn" aria-label="Account">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
-      </button>
-      <a href="cart.html" class="icon-btn cart-btn" aria-label="Cart">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 7h14l-1.5 12h-11Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg>
-        <span class="cart-count" data-cart-count hidden>0</span>
-      </a>
-    </div>
-  </div>
-</header>
+<div data-layout="header" style="min-height:72px;background:var(--color-jet);"></div>
 
 <!-- ============== SHOP HERO ============== -->
 <section class="shop-hero">
@@ -587,15 +519,7 @@
 
 </div>
 
-<!-- ============== FOOTER ============== -->
-<footer class="site-footer">
-  <span class="signature">Country Road Fashions — Bespoke since 1951.</span>
-  <div class="links">
-    <a href="book-appointment.html">Book a Visit</a>
-    <a href="in-store.html">In-Store</a>
-    <a href="index.html">House</a>
-  </div>
-</footer>
+<div data-layout="footer" style="min-height:480px;background:var(--color-charcoal);"></div>
 
 <script type="module">
   import {

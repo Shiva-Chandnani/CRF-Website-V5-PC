@@ -7,28 +7,30 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Raleway:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="preload" as="fetch" href="/components/header.html" crossorigin>
+<link rel="preload" as="fetch" href="/components/footer.html" crossorigin>
+<link rel="stylesheet" href="/css/base.css">
+<style>
+  /* FOUC tokens for data-layout slot reservations */
+  :root { --color-jet:#0E0F11; --color-charcoal:#1A1B1F; }
+</style>
+<script type="module" src="/js/layout.js"></script>
+<script type="module" src="/js/newsletter.js"></script>
+<script type="module" src="/js/meta.js"></script>
 <style>
   /* ================================================
-     COUNTRY ROAD FASHIONS — landing page (placeholders)
+     COUNTRY ROAD FASHIONS — landing page (page-specific)
      ================================================ */
 
+  /* ============== PAGE-SPECIFIC TOKENS ============== */
   :root {
-    --font-sans: 'Raleway', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    --font-serif: 'Cormorant Garamond', Georgia, serif;
     --type--caps-tracking: 1.6px;
     --line-height-body: 1.65;
-    /* Brand palette */
-    --color-jet:        #0E0F11;
-    --color-charcoal:   #2C2E33;
     --color-navy:       #1F2A3D;
     --color-graphite:   #3A3D44;
     --color-grey-dark:  #4F5258;
     --color-grey-mid:   #898C92;
     --color-grey-light: #DFDFDF;
-    --color-stone:      #B6ADA5;
-    --color-off-white:  #F7F5F2;
-    --color-white:      #FFFFFF;
-    /* Tokens */
     --color--bg: var(--color-white);
     --color-primary: var(--color-jet);
     --color-gray-darker: var(--color-charcoal);
@@ -38,31 +40,13 @@
     --color-gray-lighter: var(--color-grey-mid);
     --color-gray-lightest: var(--color-grey-light);
     --color-stroke-light: rgba(14,15,17,0.10);
-    --header-height: 64px;
     --announcement-height: 36px;
   }
 
-  *, *::before, *::after { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body {
-    margin: 0;
-    font-family: var(--font-sans);
-    font-weight: 300;
-    font-size: 14px;
-    line-height: var(--line-height-body);
-    color: var(--color-charcoal);
-    background: var(--color--bg);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  img { max-width: 100%; display: block; }
-  a { color: inherit; text-decoration: none; }
-  button { font-family: inherit; cursor: pointer; }
-
   /* ============== ANNOUNCEMENT BAR ============== */
   .announcement {
-    background: #000;
-    color: #fff;
+    background: var(--color-jet);
+    color: var(--color-white);
     height: var(--announcement-height);
     display: flex;
     align-items: center;
@@ -71,73 +55,6 @@
     letter-spacing: 0.5px;
   }
   .announcement a { text-decoration: underline; text-underline-offset: 3px; margin-left: 6px; }
-
-  /* ============== HEADER ============== */
-  .site-header {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    background: #fff;
-    border-bottom: 1px solid var(--color-stroke-light);
-    height: var(--header-height);
-  }
-  .header-inner {
-    height: 100%;
-    padding: 0 28px;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-  }
-  .nav-left { display: flex; gap: 28px; }
-  .nav-left a {
-    font-size: 11.5px;
-    text-transform: uppercase;
-    letter-spacing: 1.4px;
-    color: var(--color-charcoal);
-    transition: color .2s ease;
-  }
-  .nav-left a:hover { color: var(--color-jet); }
-  .brand-wordmark {
-    text-align: center;
-    font-family: var(--font-serif);
-    font-weight: 500;
-    font-size: 22px;
-    color: var(--color-jet);
-    line-height: 1;
-    letter-spacing: 0;
-  }
-  .nav-right {
-    display: flex;
-    justify-content: flex-end;
-    gap: 22px;
-    align-items: center;
-  }
-  .icon-btn {
-    background: none;
-    border: 0;
-    padding: 0;
-    color: #000;
-    display: inline-flex;
-    align-items: center;
-  }
-  .icon-btn svg { width: 18px; height: 18px; }
-  .cart-btn { position: relative; }
-  .cart-count {
-    position: absolute;
-    top: -6px;
-    right: -8px;
-    background: #000;
-    color: #fff;
-    font-size: 9px;
-    border-radius: 999px;
-    min-width: 14px;
-    height: 14px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 4px;
-  }
-  .cart-count[hidden] { display: none; }
 
   /* ============== HERO ============== */
   .hero {
@@ -168,9 +85,9 @@
     width: 34px;
     height: 34px;
     border-radius: 999px;
-    border: 1.5px solid #fff;
+    border: 1.5px solid var(--color-white);
     background: transparent;
-    color: #fff;
+    color: var(--color-white);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -180,7 +97,7 @@
     z-index: 5;
   }
   .video-toggle:hover { opacity: 1; transform: scale(1.05); }
-  .video-toggle:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .video-toggle:focus-visible { outline: 2px solid var(--color-white); outline-offset: 2px; }
   .video-toggle .icon-play,
   .video-toggle .icon-pause { width: 18px; height: 18px; display: none; }
   .video-toggle[data-state="playing"] .icon-pause { display: block; }
@@ -193,7 +110,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
-    color: #fff;
+    color: var(--color-white);
   }
   .hero-eyebrow {
     font-size: 11px;
@@ -209,7 +126,7 @@
     line-height: 1.04;
     letter-spacing: -0.5px;
     max-width: 720px;
-    color: #fff;
+    color: var(--color-white);
     margin: 0;
   }
   .hero-title em { font-style: italic; }
@@ -219,45 +136,6 @@
     gap: 10px;
     flex-wrap: wrap;
   }
-
-  /* ============== BUTTONS ============== */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 42px;
-    padding: 0 24px;
-    border: 1px solid #fff;
-    border-radius: 0;
-    font-family: var(--font-sans);
-    font-size: 11px;
-    letter-spacing: 2.2px;
-    text-transform: uppercase;
-    font-weight: 400;
-    transition: background .25s ease, color .25s ease, border-color .25s ease;
-    background: transparent;
-    color: #fff;
-    cursor: pointer;
-  }
-  .btn-light {
-    background: #fff;
-    color: var(--color-jet);
-    border-color: #fff;
-  }
-  .btn-light:hover { background: rgba(255,255,255,0.88); }
-  .btn-outline-light:hover { background: rgba(255,255,255,0.12); }
-  .btn-dark {
-    background: var(--color-jet);
-    color: #fff;
-    border-color: var(--color-jet);
-  }
-  .btn-dark:hover { background: var(--color-charcoal); border-color: var(--color-charcoal); }
-  .btn-outline-dark {
-    background: transparent;
-    color: var(--color-jet);
-    border-color: var(--color-jet);
-  }
-  .btn-outline-dark:hover { background: var(--color-jet); color: #fff; }
 
   /* ============== CATEGORY TILES ============== */
   .category-tiles {
@@ -283,7 +161,7 @@
     position: absolute;
     left: 32px;
     bottom: 28px;
-    color: #fff;
+    color: var(--color-white);
   }
   .tile-eyebrow {
     font-size: 10.5px;
@@ -298,7 +176,7 @@
     font-weight: 400;
     font-size: 44px;
     margin: 0;
-    color: #fff;
+    color: var(--color-white);
     line-height: 1;
     letter-spacing: -0.3px;
   }
@@ -338,7 +216,7 @@
     border: 1px solid var(--color-stroke-light);
   }
   .product-cell {
-    background: #fff;
+    background: var(--color-white);
     aspect-ratio: 4 / 5;
     display: flex;
     align-items: center;
@@ -354,7 +232,7 @@
     text-align: center;
     flex-direction: column;
     gap: 8px;
-    color: #000;
+    color: var(--color-jet);
     font-size: 18px;
   }
   .product-cell.see-all .arrow { font-size: 22px; }
@@ -417,13 +295,13 @@
     left: 36px;
     top: 50%;
     transform: translateY(-50%);
-    color: #fff;
+    color: var(--color-white);
   }
   .editorial-eyebrow {
     font-size: 10.5px;
     letter-spacing: 2.2px;
     text-transform: uppercase;
-    color: #fff;
+    color: var(--color-white);
     margin: 0 0 10px;
   }
   .editorial-title {
@@ -432,7 +310,7 @@
     font-weight: 500;
     font-size: 84px;
     margin: 0;
-    color: #fff;
+    color: var(--color-white);
     line-height: 0.95;
     letter-spacing: -1px;
   }
@@ -444,9 +322,9 @@
     font-size: 11.5px;
     text-transform: uppercase;
     letter-spacing: 1.4px;
-    color: #000;
+    color: var(--color-jet);
   }
-  .editorial-meta .right { display: inline-flex; gap: 6px; align-items: center; border-bottom: 1px solid #000; padding-bottom: 2px; }
+  .editorial-meta .right { display: inline-flex; gap: 6px; align-items: center; border-bottom: 1px solid var(--color-jet); padding-bottom: 2px; }
 
   /* ============== TRENDS CARDS ============== */
   .trends-head, .explore-head {
@@ -468,8 +346,8 @@
     font-size: 11px;
     letter-spacing: 1.4px;
     text-transform: uppercase;
-    color: #000;
-    border-bottom: 1px solid #000;
+    color: var(--color-jet);
+    border-bottom: 1px solid var(--color-jet);
     padding-bottom: 2px;
   }
   .trends-grid {
@@ -477,7 +355,7 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
   }
-  .trend-card { background: #fff; }
+  .trend-card { background: var(--color-white); }
   .trend-image {
     aspect-ratio: 4 / 5;
     overflow: hidden;
@@ -520,8 +398,8 @@
     font-size: 11px;
     letter-spacing: 1.4px;
     text-transform: uppercase;
-    color: #000;
-    border-bottom: 1px solid #000;
+    color: var(--color-jet);
+    border-bottom: 1px solid var(--color-jet);
     padding-bottom: 2px;
     display: inline-block;
     margin-bottom: 30px;
@@ -533,7 +411,7 @@
   }
   .reviews-rating .amount {
     font-size: 18px;
-    color: #000;
+    color: var(--color-jet);
   }
   .stars-row {
     display: flex;
@@ -623,7 +501,7 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 16px;
   }
-  .explore-card { background: #fff; }
+  .explore-card { background: var(--color-white); }
   .explore-image {
     aspect-ratio: 3 / 2;
     overflow: hidden;
@@ -639,120 +517,15 @@
     color: var(--color-gray-darker);
   }
   .explore-num { color: var(--color-gray-light); font-variant-numeric: tabular-nums; }
-  .explore-meta strong { font-weight: 400; color: #000; }
-
-  /* ============== FOOTER ============== */
-  .site-footer {
-    border-top: 1px solid var(--color-stroke-light);
-    background: #fff;
-    padding: 56px 28px 28px;
-  }
-  .footer-grid {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr 1fr;
-    gap: 40px;
-    padding-bottom: 40px;
-    border-bottom: 1px solid var(--color-stroke-light);
-  }
-  .footer-brand .footer-logo-img {
-    width: 104px;
-    height: 104px;
-    object-fit: contain;
-    margin-bottom: 18px;
-    display: block;
-    padding: 12px;
-    background: var(--color-jet);
-    box-sizing: border-box;
-  }
-  .footer-brand .footer-wordmark {
-    font-family: var(--font-serif);
-    font-weight: 500;
-    font-size: 22px;
-    color: var(--color-jet);
-    margin: 0 0 6px;
-    letter-spacing: 0;
-  }
-  .footer-brand .brand-line {
-    font-size: 12.5px;
-    color: var(--color-grey-dark);
-    margin: 0 0 28px;
-    line-height: 1.5;
-  }
-  .footer-col h4 {
-    font-size: 11px;
-    letter-spacing: 1.4px;
-    text-transform: uppercase;
-    color: #000;
-    margin: 0 0 14px;
-    font-weight: 400;
-  }
-  .footer-col ul { list-style: none; padding: 0; margin: 0; }
-  .footer-col li { margin-bottom: 8px; font-size: 12.5px; color: var(--color-gray-dark); }
-  .footer-col a:hover { color: #000; }
-
-  .footer-newsletter h5 {
-    margin: 0 0 6px;
-    font-size: 12.5px;
-    color: #000;
-    font-weight: 400;
-  }
-  .footer-newsletter p {
-    margin: 0 0 10px;
-    font-size: 11.5px;
-    color: var(--color-gray-light);
-  }
-  .newsletter-form {
-    display: flex;
-    border: 1px solid #000;
-    max-width: 320px;
-  }
-  .newsletter-form input {
-    flex: 1;
-    border: 0;
-    padding: 8px 12px;
-    font-size: 13px;
-    font-family: inherit;
-    background: transparent;
-    outline: none;
-  }
-  .newsletter-form button {
-    background: #000;
-    color: #fff;
-    border: 0;
-    padding: 0 14px;
-    font-size: 14px;
-  }
-
-  .footer-bottom {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 22px;
-    font-size: 11.5px;
-    color: var(--color-gray-light);
-  }
-  .footer-bottom .links a { margin-right: 16px; }
-  .currency-select {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid var(--color-stroke-light);
-    padding: 6px 10px;
-    border-radius: 2px;
-    font-size: 11.5px;
-    color: var(--color-gray-dark);
-  }
+  .explore-meta strong { font-weight: 400; color: var(--color-jet); }
 
   /* ============== RESPONSIVE ============== */
   @media (max-width: 900px) {
-    .header-inner { padding: 0 16px; }
-    .nav-left { gap: 18px; }
     .hero-overlay { padding: 32px 24px; }
     .category-tiles, .editorial { grid-template-columns: 1fr; }
     .product-grid { grid-template-columns: repeat(2, 1fr); }
     .trends-grid, .explore-grid { grid-template-columns: 1fr; }
     .reviews-grid { grid-template-columns: 1fr; gap: 24px; }
-    .footer-grid { grid-template-columns: 1fr 1fr; }
     .editorial-title { font-size: 52px; }
   }
 </style>
@@ -767,29 +540,7 @@
   <a href="#">Book a Visit</a>
 </div>
 
-<!-- ============== HEADER ============== -->
-<header class="site-header">
-  <div class="header-inner">
-    <nav class="nav-left">
-      <a href="#">Shop</a>
-      <a href="in-store.html">In-Store</a>
-      <a href="#">Trunk Shows</a>
-    </nav>
-    <a href="#" class="brand-wordmark">Country Road Fashions</a>
-    <div class="nav-right">
-      <button class="icon-btn" aria-label="Search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
-      </button>
-      <button class="icon-btn" aria-label="Account">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
-      </button>
-      <a href="cart.html" class="icon-btn cart-btn" aria-label="Cart">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 7h14l-1.5 12h-11Z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg>
-        <span class="cart-count" data-cart-count hidden>0</span>
-      </a>
-    </div>
-  </div>
-</header>
+<div data-layout="header" style="min-height:72px;background:var(--color-jet);"></div>
 
 <!-- ============== HERO ============== -->
 <section class="hero">
@@ -805,8 +556,8 @@
     <p class="hero-eyebrow">Bespoke Since 1951</p>
     <h1 class="hero-title">The Art of <em>Perfect Fit</em></h1>
     <div class="hero-actions">
-      <a href="book-appointment.html" class="btn btn-light">Book a Visit</a>
-      <a href="#" class="btn btn-outline-light">Custom Made</a>
+      <a href="book-appointment.html" class="btn btn--light">Book a Visit</a>
+      <a href="#" class="btn btn--ghost-light">Custom Made</a>
     </div>
   </div>
 </section>
@@ -1006,72 +757,7 @@
   </div>
 </section>
 
-<!-- ============== FOOTER ============== -->
-<footer class="site-footer">
-  <div class="footer-grid">
-    <div class="footer-brand">
-      <img class="footer-logo-img" src="brand_assets/crf-logo.png" alt="Country Road Fashions" />
-      <p class="footer-wordmark">Country Road Fashions</p>
-      <p class="brand-line">Bespoke since 1951.<br/>Bangkok, Thailand.</p>
-      <div class="footer-newsletter">
-        <h5>Stay in touch</h5>
-        <p>Quietly delivered: trunk show dates and seasonal cloth arrivals.</p>
-        <form class="newsletter-form" onsubmit="return false;">
-          <input type="email" placeholder="Your email" />
-          <button type="submit" aria-label="Subscribe">→</button>
-        </form>
-      </div>
-    </div>
-    <div class="footer-col">
-      <h4>Bespoke</h4>
-      <ul>
-        <li><a href="#">Custom Suits</a></li>
-        <li><a href="#">Custom Shirts</a></li>
-        <li><a href="#">Tuxedos &amp; Black Tie</a></li>
-        <li><a href="#">Wedding Suits</a></li>
-        <li><a href="#">Mandarin Collar</a></li>
-        <li><a href="#">For Women</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Visit Us</h4>
-      <ul>
-        <li><a href="#">Bangkok Showroom</a></li>
-        <li><a href="#">Trunk Shows</a></li>
-        <li><a href="#">Book a Consultation</a></li>
-        <li><a href="#">Online Measurements</a></li>
-        <li><a href="#">Worldwide Shipping</a></li>
-        <li><a href="#">Contact Us</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>House</h4>
-      <ul>
-        <li><a href="#">Our Heritage</a></li>
-        <li><a href="#">The Bespoke Process</a></li>
-        <li><a href="#">Fabric Library</a></li>
-        <li><a href="#">Press</a></li>
-        <li><a href="#">FAQs</a></li>
-        <li><a href="#">Satisfaction Promise</a></li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="footer-bottom">
-    <div>
-      © 2026 Country Road Fashions, Bangkok.
-      <span class="links" style="margin-left:18px;">
-        <a href="#">Privacy</a>
-        <a href="#">Sitemap</a>
-        <a href="#">Accessibility</a>
-      </span>
-    </div>
-    <div class="currency-select">
-      <span>Thailand (THB)</span>
-      <span>▾</span>
-    </div>
-  </div>
-</footer>
+<div data-layout="footer" style="min-height:480px;background:var(--color-charcoal);"></div>
 
 <script>
   (function () {

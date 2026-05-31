@@ -171,3 +171,12 @@ export interface ProductFilters {
   maxPrice?: number;
   availability?: Availability;
 }
+
+export interface NewsletterSubscriberRow {
+  email: string;
+  profile_id: string | null;
+  source: string;
+  opted_in_at: string;
+  unsubscribed_at: string | null;
+  created_at: string;
+}
