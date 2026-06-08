@@ -22,6 +22,26 @@
      COUNTRY ROAD FASHIONS — landing page (page-specific)
      ================================================ */
 
+  /* ============== HOMEPAGE HEADER VARIANT (light) ==============
+     Inverts the shared dark header to off-white surface + jet ink.
+     Only on this page — every other page keeps the default dark header. */
+  .site-header {
+    background: var(--color-off-white);
+    color: var(--color-jet);
+    border-bottom: 1px solid var(--color-rule);
+  }
+  .nav-left a { color: var(--color-jet); }
+  .nav-left a:hover { color: var(--color-muted); }
+  .nav-left a[aria-current="page"] { color: var(--color-muted); }
+  .brand-wordmark { color: var(--color-jet); }
+  .icon-btn { color: var(--color-jet); }
+  .icon-btn:hover { color: var(--color-muted); }
+  .cart-btn .cart-count {
+    background: var(--color-jet);
+    color: var(--color-off-white);
+  }
+  .site-header :focus-visible { outline-color: var(--color-jet); }
+
   /* ============== PAGE-SPECIFIC TOKENS ============== */
   :root {
     --type--caps-tracking: 1.6px;
@@ -520,7 +540,7 @@
 </head>
 <body>
 
-<div data-layout="header" style="min-height:72px;background:var(--color-jet);"></div>
+<div data-layout="header" style="min-height:72px;background:var(--color-off-white);"></div>
 
 <!-- ============== HERO ============== -->
 <section class="hero">
