@@ -2,9 +2,9 @@
 
 Single source of truth for a new chat session to pick up where the previous one left off. Pair this with [CLAUDE.md](CLAUDE.md) (frontend rules) for full context.
 
-> **Last session ended** at: agentic workflow planned and approved for the 14-feature backlog. Codebase audit done. **New Phase 0 inserted** before Phase 1 to fix header/footer/CSS duplication across all 6 pages before adding 6+ more pages. Strategic decisions locked: Stripe full checkout = YES, Supabase Auth, worktree-per-feature isolation. Customizer V1 + cart V1 + VBC heroes all stable from prior sessions. **Git state**: only the initial commit exists — everything else uncommitted but stable.
+> **Last session ended** at: **Phase 0 shipped** (squash commit `623c9c3` on `main`, 2026-05-31). Shared header/footer components mounted at runtime by `js/layout.js`. `css/base.css` owns the token vocabulary and `.btn--*` system. Newsletter capture wired to a new `newsletter_subscribers` table (INSERT-only RLS). Two follow-on commits since Phase 0: the universal announcement bar was removed from all pages (`2f28870`, 2026-06-03) and the homepage now uses a light header variant while every other page keeps the dark one (`f97113b`, 2026-06-07).
 >
-> **What's next**: **Execute Phase 0 — shared layout refactor.** The full workflow methodology lives at `~/.claude/plans/just-to-revamp-the-agile-sundae.md` — read it first. Phase 0 detailed scope is documented in [§7 Open / next steps](#7-open--next-steps) below. The per-feature agentic cycle is: `superpowers:brainstorming` → `superpowers:writing-plans` → `superpowers:using-git-worktrees` → `superpowers:executing-plans` → `superpowers:verification-before-completion` → `superpowers:requesting-code-review` → `superpowers:finishing-a-development-branch`.
+> **What's next**: **Phase 1 — Identity & Personal Data** (auth + profiles + measurements schema + privacy page baseline). The full workflow methodology lives at `~/.claude/plans/just-to-revamp-the-agile-sundae.md` — read it first. Phase 1 scope is documented in [§7 Open / next steps](#7-open--next-steps) below (see the "Phase 1 — Spec carryover" subsection). The per-feature agentic cycle is: `superpowers:brainstorming` → `superpowers:writing-plans` → `superpowers:using-git-worktrees` → `superpowers:subagent-driven-development` → `superpowers:verification-before-completion` → `superpowers:requesting-code-review` → `superpowers:finishing-a-development-branch`. Phase 0 retrospective notes for things to carry forward live at the end of [§7](#7-open--next-steps) under "Phase 0 — shipped".
 
 ---
 
@@ -84,6 +84,7 @@ v_customization_catalog — view; one row per (item × category × option) for t
 | `customization_options` | 65 — every option has a placeholder SVG under `assets/customization/svg/`. |
 | `item_type_customization_categories` | 21 — every category linked to `formal-suit-2-piece`. |
 | `v_customization_catalog` | view: `(item_type, category, option)` resolved + ordered for the drawer. |
+| `newsletter_subscribers` | Phase 0 — `(email pk, profile_id uuid nullable, source, opted_in_at, unsubscribed_at, created_at)`. RLS: anon INSERT only (intentionally no anon UPDATE/SELECT to prevent mass-mutation + email enumeration), authenticated owners SELECT own row. Migration: `db/07_newsletter_subscribers.sql`. |
 
 ### Storage
 
@@ -214,6 +215,8 @@ Then `Read` the PNG to view it.
 - **Hero photos are padded at the file level**, not via CSS. The original photos had the model touching top/bottom edges; `scripts/pad-hero-photos.mjs` extends the canvas and replicates the edge rows (so the studio backdrop gradient continues seamlessly into the new margin).
 - **Pricing language**: "from THB X,XXX", "Reserve Consultation", "Bespoke Make" — bespoke vocabulary, not retail.
 - **Visual identity**: Cormorant Garamond serif (display) + Raleway sans (body). Palette: jet `#0E0F11`, charcoal, stone `#B6ADA5` (warm accent), off-white, cream. Italic emphasis on key serif words with a stone-coloured hairline under them (e.g. "The *Bespoke* Collection", "The *Cavani Wool* Suit").
+- **No announcement bar** (post-Phase-0 cleanup, 2026-06-03). The thin "Worldwide shipping · Bespoke since 1951 · Book a Visit" strip was removed from every page. Every page now opens directly with the site header. Don't reintroduce it on new pages.
+- **Header surface varies per page**: `index.html` uses a light off-white header variant (jet ink + jet icons + inverted cart badge) — implemented as a page-specific override in the page's inline `<style>` block (post-Phase-0, 2026-06-07). Every other page uses the default dark/jet header from `css/base.css`. When Phase 1 adds new pages (signup/login/account/privacy), default to the dark header unless the page is conceptually a "landing" surface.
 
 ---
 
@@ -257,7 +260,7 @@ A **phase** is a sequence of these units. Phase ends when all its features are m
 | 10 | Professional polish | Continuous | ⬜ |
 | 11 | SEO optimisation | 3 baseline + continuous | ⬜ |
 | 12 | Blog (SEO content) | 6 | ⬜ |
-| 13 | Newsletter signup + opt-in | **0 (capture wiring)** + 6 (campaigns) | ⬜ |
+| 13 | Newsletter signup + opt-in | **0 (capture wiring)** + 6 (campaigns) | ✅ V0 capture done in Phase 0 (footer form → `newsletter_subscribers`); double-opt-in + ESP deferred to Phase 6 |
 | 14 | Privacy page + security baseline | 1 (draft + CSP baseline) + 3 (CSP hardening + RLS audit) | ⬜ |
 
 ### Strategic decisions — locked
@@ -277,8 +280,8 @@ A **phase** is a sequence of these units. Phase ends when all its features are m
 
 | Phase | Goal | Items | Notes |
 |---|---|---|---|
-| **0 — Foundation Refactor** | One shared spine for every page | Shared header/footer, `css/base.css`, normalized `.btn` system, meta scaffold, newsletter capture table + footer-form wiring (item 13 capture half) | **EXECUTE NEXT.** ~1 session. Detailed spec below. |
-| 1 — Identity & Personal Data | Customers exist; we capture them | 5, 6 (schema), 14 (privacy page draft + CSP baseline) | Strict prereq for everything personal. |
+| **0 — Foundation Refactor** | One shared spine for every page | Shared header/footer, `css/base.css`, normalized `.btn` system, meta scaffold, newsletter capture table + footer-form wiring (item 13 capture half) | **✅ shipped 2026-05-31** (commit `623c9c3`). Retrospective notes in the "Phase 0 — shipped" subsection below. |
+| **1 — Identity & Personal Data** | Customers exist; we capture them | 5, 6 (schema), 14 (privacy page draft + CSP baseline) | **EXECUTE NEXT.** Strict prereq for everything personal. Spec carryover below. |
 | 2 — Commerce | Real cart + paid orders | 2 (cart dual-mode upgrade), 6 (UX during checkout), 7 (Stripe) | Depends on Phase 1. |
 | 3 — Discovery + SEO + Privacy hardening | Findability + production-ready security | 3, 4, 11, 14 (CSP tighten + RLS audit) | Many parallel streams. |
 | 4 — Customization expansion | Jacket + Trouser drawers | 1 (extend) | Half session. Schema already supports it (see §10). |
@@ -286,7 +289,7 @@ A **phase** is a sequence of these units. Phase ends when all its features are m
 | 6 — Marketing | Content + email | 12, 13 (full double-opt-in + ESP), 10 (final polish pass) | Last because earlier phases generate the audience. |
 | Continuous | Polish + SEO check per PR | 10, 11 | Every feature PR closes with frontend-design pass + meta-tags check. |
 
-### Phase 0 — Detailed spec (execute next session)
+### Phase 0 — Original spec (HISTORICAL; superseded by the "shipped" subsection further down)
 
 **Goal:** every existing page renders identical, shared header + footer; all styling lives in `css/base.css` + a thin per-page sheet; newsletter form actually writes to Supabase.
 
@@ -322,7 +325,7 @@ A **phase** is a sequence of these units. Phase ends when all its features are m
 6. PROJECT.md updated with Phase 0 shipped inventory.
 7. Committed to main with a clear "Phase 0: shared layout + design system lock" commit.
 
-### Phase 0 — shipped 2026-05-30
+### Phase 0 — shipped 2026-05-31
 
 Shared spine landed. Every existing page now mounts `components/header.html` + `components/footer.html` at runtime via `js/layout.js`. `css/base.css` owns the token vocabulary, `.btn--*` system, form controls, header styles, and footer styles. Newsletter capture writes to `newsletter_subscribers` via `js/newsletter.js`.
 
@@ -358,7 +361,7 @@ Shared spine landed. Every existing page now mounts `components/header.html` + `
 - The `<form data-newsletter-form>` is bound by `js/newsletter.js` exactly once via a `data-newsletter-bound="1"` guard. If a future feature re-renders the footer dynamically, the guard prevents double-binding but doesn't re-bind a fresh form node — call `js/newsletter.js`'s `init()` after such a re-render.
 - The mobile mega-menu (`js/mega-menu.js` + `css/mega-menu.css`) lives separately, used on 5 of 6 pages, unchanged in Phase 0.
 
-### Phase 1 — Spec carryover (for reference; execute after Phase 0)
+### Phase 1 — Spec carryover (EXECUTE NEXT — Phase 0 is shipped)
 
 **Goal:** customer accounts + measurements schema + privacy baseline.
 
