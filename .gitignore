@@ -11,3 +11,4 @@ temporary screenshots/
 # Source-photo directories — uploaded to Supabase Storage; not needed at runtime.
 Cavani Designs/
 Vitale Barberis Canonico/
+db/_check_*.sql
