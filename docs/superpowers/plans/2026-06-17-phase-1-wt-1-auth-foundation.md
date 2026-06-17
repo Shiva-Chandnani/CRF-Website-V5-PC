@@ -203,7 +203,7 @@ begin
     from pg_constraint
    where conrelid = 'public.newsletter_subscribers'::regclass
      and contype  = 'f'
-     and (select array_agg(attname) from pg_attribute
+     and (select array_agg(attname::text) from pg_attribute
             where attrelid = conrelid and attnum = any(conkey)) = array['profile_id'];
 
   if fk_name is not null then
