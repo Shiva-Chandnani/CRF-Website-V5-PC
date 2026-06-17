@@ -62,7 +62,8 @@ try {
 } finally {
   if (user) await admin.auth.admin.deleteUser(user.id).catch(() => {});
   // Newsletter row's profile_id is now null again (FK on delete set null); remove the row.
-  await admin.from('newsletter_subscribers').delete().eq('email', email).catch(() => {});
+  // Supabase query builders are thenables, not Promises — can't chain .catch() directly.
+  try { await admin.from('newsletter_subscribers').delete().eq('email', email); } catch {}
 }
 
 if (failed) {
