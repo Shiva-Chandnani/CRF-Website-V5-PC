@@ -2,6 +2,7 @@ node_modules/
 temporary screenshots/
 .DS_Store
 .claude/
+.superpowers/
 .env
 .env.local
 .env.*.local
