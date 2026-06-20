@@ -2,9 +2,22 @@
 
 Single source of truth for a new chat session to pick up where the previous one left off. Pair this with [CLAUDE.md](CLAUDE.md) (frontend rules) for full context.
 
-> **Last session ended** at: **Phase 0 shipped** (squash commit `623c9c3` on `main`, 2026-05-31). Shared header/footer components mounted at runtime by `js/layout.js`. `css/base.css` owns the token vocabulary and `.btn--*` system. Newsletter capture wired to a new `newsletter_subscribers` table (INSERT-only RLS). Two follow-on commits since Phase 0: the universal announcement bar was removed from all pages (`2f28870`, 2026-06-03) and the homepage now uses a light header variant while every other page keeps the dark one (`f97113b`, 2026-06-07).
+> **Last session ended** at: **Phase 1 WT-1 in flight — Tasks 2–8 committed, Task 9 BLOCKED on Supabase email validation** (2026-06-19).
 >
-> **What's next**: **Phase 1 — Identity & Personal Data** (auth + profiles + measurements schema + privacy page baseline). The full workflow methodology lives at `~/.claude/plans/just-to-revamp-the-agile-sundae.md` — read it first. Phase 1 scope is documented in [§7 Open / next steps](#7-open--next-steps) below (see the "Phase 1 — Spec carryover" subsection). The per-feature agentic cycle is: `superpowers:brainstorming` → `superpowers:writing-plans` → `superpowers:using-git-worktrees` → `superpowers:subagent-driven-development` → `superpowers:verification-before-completion` → `superpowers:requesting-code-review` → `superpowers:finishing-a-development-branch`. Phase 0 retrospective notes for things to carry forward live at the end of [§7](#7-open--next-steps) under "Phase 0 — shipped".
+> **Phase 1 design + plans landed on `main`:**
+> - Spec: [docs/superpowers/specs/2026-06-16-phase-1-design.md](docs/superpowers/specs/2026-06-16-phase-1-design.md) (commit `30bebcf`)
+> - 4 plans: `docs/superpowers/plans/2026-06-17-phase-1-wt-{1,2,3,4}-*.md` (commit `54a9cf6`)
+> - 2 plan errata fixes (committed during WT-1 execution): `ffc27ca` (SQL `name[] vs text[]` cast in FK re-assert), `fcb7048` (Supabase query-builder `.catch()` → try/catch)
+>
+> **WT-1 worktree state:** branch `phase-1/auth-foundation` in `.worktrees/phase-1/auth-foundation/` (worktree directory is gitignored). 7 commits made (`99c1579` → `0d955e9`): db/08_profiles.sql APPLIED to live Supabase, profiles RLS verified, trigger backfill verified, delete_my_account RPC verified, js/auth.js shipped, exports surface unit-tested. **One uncommitted file:** `scripts/test-auth-roundtrip.mjs` (Task 9). The browser-side public `auth.signUp()` is rejected with "Email address invalid" for both `@example.test` and `@example.com` — see [memory](../../.claude/projects/-Users-shivachandnani-Desktop-CRF-Website-V5---ProperCloth/memory/project_phase1_wt1_state.md) for resume instructions.
+>
+> **What's next — to resume WT-1:**
+> 1. Either disable Supabase Auth email-domain blocking (dashboard → Authentication → Providers → Email settings), OR provide a real domain (e.g. `test.countryroadfashions.com`) and update line 22 of the test.
+> 2. From the worktree, run `node serve.mjs &` (from worktree root) + `node scripts/test-auth-roundtrip.mjs`. If green, commit with `git add scripts/test-auth-roundtrip.mjs && git commit -m "Phase 1 WT-1: test-auth-roundtrip end-to-end auth flow"`.
+> 3. Continue with Tasks 10 (auth-guards), 11 (header-account-swap), 12 (full test sweep), 13 (PROJECT.md update + PR). All three remaining tests use admin-API createUser so likely won't hit the same email-validation block.
+> 4. After WT-1 ships, Wave 1 continues with WT-3 (measurements-schema) + WT-4 (privacy-csp) in parallel.
+>
+> **Phase 1 agentic cycle reference:** `superpowers:brainstorming` → `superpowers:writing-plans` → `superpowers:using-git-worktrees` → `superpowers:subagent-driven-development` → `superpowers:verification-before-completion` → `superpowers:requesting-code-review` → `superpowers:finishing-a-development-branch`. Full methodology: `~/.claude/plans/just-to-revamp-the-agile-sundae.md`. Phase 0 retrospective notes live at the end of [§7](#7-open--next-steps) under "Phase 0 — shipped".
 
 ---
 
