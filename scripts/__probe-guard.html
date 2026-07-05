@@ -1,0 +1,16 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>guard probe</title></head>
+<body>
+<script type="module">
+  import * as auth from '/js/auth.js';
+  const q = new URLSearchParams(location.search);
+  const which = q.get('g');                       // 'auth' | 'guest'
+  const redirectTo = q.get('to') || (which === 'auth' ? '/login.html' : '/account.html');
+  window.__guardResult = null;
+  (async () => {
+    if (which === 'auth')  window.__guardResult = await auth.requireAuth({ redirectTo });
+    if (which === 'guest') window.__guardResult = await auth.requireGuest({ redirectTo });
+    window.__guardDone = true;
+  })();
+</script>
+</body></html>
