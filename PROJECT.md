@@ -13,13 +13,12 @@ Single source of truth for a new chat session to pick up where the previous one 
 >
 > **⚙️ Config change made during WT-1 (production-relevant):** Supabase Auth **email confirmation is now DISABLED** (`mailer_autoconfirm = true`) — required to make the public-`signUp` roundtrip test deterministic (the built-in mailer is rate-limited to ~2/hr; `@example.com`/`.test` are also on the reserved-domain blocklist, so tests use `@test.countryroadfashions.com`). **Re-enable email confirmation + configure custom SMTP before production launch** (tracked for Phase 2/pre-launch).
 >
-> **🐞 Known regression discovered during WT-1 (NOT auth-related, tracked separately):** Supabase **image transformation is disabled** on the project — `GET /storage/v1/render/image/public/...` returns `403 FeatureNotEnabled` ("feature not enabled for this tenant"). This breaks **all product images site-wide** (shop cards, PDP heroes/thumbs) because `js/data-loader.js` builds render-endpoint URLs. The direct `/storage/v1/object/public/...` endpoint still serves images 200/`image/jpeg`. Also breaks `scripts/test-swatch-prefers-hero.mjs` (its `waitForImg()` hangs on the errored image). **Fix options:** (A) re-enable the Supabase image-transformation add-on, or (B) point `fabricImageUrl`/`productImageUrl` at the direct object endpoint (loses server-side resize). **Owner decision: fix separately from WT-1.**
+> **✅ Image-transformation 403 — RESOLVED 2026-07-06.** Earlier the Supabase `render/image` endpoint returned `403 FeatureNotEnabled`, breaking all product images site-wide (`js/data-loader.js` builds render-endpoint URLs). Owner upgraded to **Supabase Pro + enabled Image Transformation** (Storage → Settings). Verified: render endpoint `200 image/jpeg` (widths 140/200/1400), shop + PDP images render, `scripts/test-swatch-prefers-hero.mjs` green. Full Phase 0 image gate restored.
 >
 > **What's next:**
-> 1. **WT-4 (privacy-csp)** — `privacy.html` + CSP `<meta>` rollout. Plan: `docs/superpowers/plans/2026-06-17-phase-1-wt-4-privacy-csp.md`. Note its puppeteer CSP sweep loads the image-broken shop/product pages (403 below) — verify that doesn't false-positive.
+> 1. **WT-4 (privacy-csp)** — `privacy.html` + CSP `<meta>` rollout. Plan: `docs/superpowers/plans/2026-06-17-phase-1-wt-4-privacy-csp.md`.
 > 2. Then **WT-2 (auth pages: signup/login/account/privacy)** — depends on WT-1 (done) + WT-3 (done) + WT-4.
-> 3. Fix the image-transformation 403 regression (see below) — highest-impact, affects the live site; deferred by owner.
-> 4. Tiny hygiene: `test-newsletter-submit` flaky race (waits for form existence, not handler bind) and re-enable email confirmation + SMTP before launch.
+> 3. Pre-launch (Phase 2): re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + configure custom SMTP.
 >
 > **Phase 1 agentic cycle reference:** `superpowers:brainstorming` → `superpowers:writing-plans` → `superpowers:using-git-worktrees` → `superpowers:subagent-driven-development` → `superpowers:verification-before-completion` → `superpowers:requesting-code-review` → `superpowers:finishing-a-development-branch`. Full methodology: `~/.claude/plans/just-to-revamp-the-agile-sundae.md`. Phase 0 retrospective notes live at the end of [§7](#7-open--next-steps) under "Phase 0 — shipped".
 
@@ -388,8 +387,8 @@ Shared spine landed. Every existing page now mounts `components/header.html` + `
 - **Tests** `test-profile-rls`, `test-trigger-newsletter-backfill`,
   `test-delete-rpc`, `test-auth-module-shape`, `test-auth-roundtrip`,
   `test-auth-guards`, `test-header-account-swap` — all green. Phase 0 suite
-  green **except** `test-swatch-prefers-hero`, which is red due to the
-  image-transformation 403 regression (see top banner), not WT-1.
+  green (during WT-1, `test-swatch-prefers-hero` was temporarily red due to the
+  image-transformation 403 — since resolved 2026-07-06, see top banner).
 - **Config side-effects (see top banner):** Supabase email confirmation
   disabled (`mailer_autoconfirm = true`) for deterministic auth tests —
   re-enable + add SMTP before launch. Auth test emails use
