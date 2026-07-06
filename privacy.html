@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' https://esm.sh https://assets.calendly.com;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://assets.calendly.com;
+  font-src 'self' https://fonts.gstatic.com;
+  img-src 'self' data: https://*.supabase.co https://placehold.co;
+  media-src 'self';
+  connect-src 'self' https://*.supabase.co wss://*.supabase.co;
+  frame-src https://calendly.com;
+  form-action 'self';
+  base-uri 'self';
+  object-src 'none';
+">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Privacy Notice — Country Road Fashions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Raleway:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="preload" as="fetch" href="/components/header.html" crossorigin>
+<link rel="preload" as="fetch" href="/components/footer.html" crossorigin>
+<link rel="stylesheet" href="/css/base.css">
+<style>
+  /* FOUC token reservation for the mounted layout slots */
+  :root { --color-jet:#0E0F11; --color-charcoal:#1A1B1F; }
+</style>
+<script type="module" src="/js/layout.js"></script>
+<script type="module" src="/js/newsletter.js"></script>
+<style>
+  /* ---------------------------------------------------------------------
+     privacy.html — a bespoke tailor's privacy notice, set as a referenceable
+     numbered document. All colour + type from css/base.css tokens.
+     --------------------------------------------------------------------- */
+  .privacy { background: var(--color-off-white); color: var(--color-ink); }
+
+  .privacy-inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: clamp(56px, 7vw, 104px) var(--space-5) var(--space-9);
+  }
+
+  /* --- Banner ------------------------------------------------------------ */
+  .privacy-banner {
+    padding-bottom: var(--space-6);
+    margin-bottom: var(--space-7);
+    border-bottom: 1px solid var(--color-rule);
+  }
+  .privacy-eyebrow {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-stone);
+    margin: 0 0 var(--space-4);
+  }
+  .privacy-banner h1 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    letter-spacing: -0.03em;
+    line-height: 1.02;
+    color: var(--color-jet);
+    margin: 0;
+  }
+  .privacy-banner h1 em {
+    font-style: italic;
+    position: relative;
+    white-space: nowrap;
+  }
+  .privacy-banner h1 em::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0.08em;
+    height: 1px;
+    background: var(--color-stone);
+  }
+  .privacy-dates {
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    color: var(--color-muted);
+    margin: var(--space-5) 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+  }
+  .privacy-dates .label {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.6875rem;
+    color: var(--color-stone);
+    margin-right: var(--space-2);
+  }
+  .privacy-dates time { color: var(--color-charcoal); font-weight: 500; }
+
+  /* --- Grid: sticky TOC rail + reading column --------------------------- */
+  .privacy-grid { display: block; }
+  @media (min-width: 1024px) {
+    .privacy-grid {
+      display: grid;
+      grid-template-columns: 208px 1fr;
+      gap: var(--space-8);
+      align-items: start;
+    }
+  }
+
+  /* --- Contents (styled like an order docket) --------------------------- */
+  .privacy-toc {
+    margin: 0 0 var(--space-7);
+    padding: var(--space-5);
+    border: 1px solid var(--color-rule);
+    background: var(--color-cream);
+  }
+  @media (min-width: 1024px) {
+    .privacy-toc {
+      position: sticky;
+      top: var(--space-8);
+      margin: 0;
+      background: transparent;
+      border: none;
+      border-left: 1px solid var(--color-stone-soft);
+      padding: var(--space-1) 0 var(--space-1) var(--space-5);
+    }
+  }
+  .privacy-toc strong {
+    display: block;
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-stone);
+    margin-bottom: var(--space-4);
+  }
+  .privacy-toc ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+  .privacy-toc li { counter-increment: toc; margin: 0; }
+  .privacy-toc a {
+    display: grid;
+    grid-template-columns: 1.75rem 1fr;
+    gap: var(--space-1);
+    padding: 0.3rem 0;
+    font-family: var(--font-sans);
+    font-size: 0.8125rem;
+    line-height: 1.35;
+    color: var(--color-ink);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: color var(--t-fast, 150ms) var(--ease-out);
+  }
+  .privacy-toc a::before {
+    content: counter(toc, decimal-leading-zero);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-stone);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    padding-top: 0.12em;
+  }
+  .privacy-toc a:hover { color: var(--color-jet); }
+  .privacy-toc a:hover span { border-bottom: 1px solid var(--color-stone); }
+  .privacy-toc a:focus-visible { outline: 2px solid var(--color-jet); outline-offset: 3px; }
+
+  /* --- Reading column --------------------------------------------------- */
+  .privacy-body { max-width: 680px; }
+  .privacy-lead {
+    font-family: var(--font-serif);
+    font-size: clamp(1.25rem, 2.2vw, 1.5rem);
+    line-height: 1.5;
+    color: var(--color-charcoal);
+    margin: 0 0 var(--space-7);
+  }
+  .privacy-lead em { font-style: italic; color: var(--color-jet); }
+
+  .privacy-section { padding-top: var(--space-6); margin-top: var(--space-6); border-top: 1px solid var(--color-rule); }
+  .privacy-section:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
+  .privacy-section > h2 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: clamp(1.5rem, 2.6vw, 1.875rem);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    color: var(--color-jet);
+    margin: 0 0 var(--space-4);
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+  }
+  .privacy-section > h2 .num {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--color-stone);
+    transform: translateY(-0.35em);
+    flex: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .privacy-body p,
+  .privacy-body li {
+    font-family: var(--font-sans);
+    font-weight: 300;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--color-ink);
+  }
+  .privacy-body p { margin: 0 0 var(--space-4); }
+  .privacy-body ul { margin: var(--space-2) 0 var(--space-5); padding-left: 0; list-style: none; }
+  .privacy-body ul li {
+    position: relative;
+    padding-left: var(--space-5);
+    margin-bottom: var(--space-3);
+  }
+  .privacy-body ul li::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0.7em;
+    width: 10px; height: 1px;
+    background: var(--color-stone);
+  }
+  .privacy-body strong { font-weight: 600; color: var(--color-charcoal); }
+  .privacy-body a {
+    color: var(--color-jet);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-stone);
+    transition: border-color var(--t-fast, 150ms) var(--ease-out);
+  }
+  .privacy-body a:hover { border-bottom-color: var(--color-jet); }
+  .privacy-body a:focus-visible { outline: 2px solid var(--color-jet); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .privacy-toc a, .privacy-body a { transition: none; }
+  }
+
+  /* --- Print: shed the chrome, keep the document ------------------------ */
+  @media print {
+    [data-layout="header"], [data-layout="footer"], .privacy-toc { display: none !important; }
+    .privacy { background: #fff; }
+    .privacy-inner { max-width: none; padding: 0; }
+    .privacy-grid { display: block; }
+    .privacy-body { max-width: none; }
+    .privacy-body p, .privacy-body li { color: #000; }
+  }
+</style>
+</head>
+<body>
+<div data-layout="header" style="min-height:72px;background:var(--color-charcoal);"></div>
+
+<main class="privacy">
+  <div class="privacy-inner">
+
+    <header class="privacy-banner" id="header-banner">
+      <p class="privacy-eyebrow">Country Road Fashions · Bespoke since 1951</p>
+      <h1>Privacy <em>Notice</em></h1>
+      <p class="privacy-dates">
+        <span><span class="label">Last updated</span><time datetime="2026-06-17">17 June 2026</time></span>
+        <span><span class="label">Effective</span><time datetime="2026-06-17">17 June 2026</time></span>
+      </p>
+    </header>
+
+    <div class="privacy-grid">
+      <nav class="privacy-toc" aria-label="On this page">
+        <strong>On this page</strong>
+        <ol>
+          <li><a href="#intro"><span>Introduction</span></a></li>
+          <li><a href="#who-we-are"><span>Who we are</span></a></li>
+          <li><a href="#what-we-collect"><span>What we collect</span></a></li>
+          <li><a href="#why-we-collect"><span>Why we collect it</span></a></li>
+          <li><a href="#who-we-share-with"><span>Who we share it with</span></a></li>
+          <li><a href="#how-long-we-keep"><span>How long we keep it</span></a></li>
+          <li><a href="#your-rights"><span>Your rights</span></a></li>
+          <li><a href="#cookies-and-local-storage"><span>Cookies &amp; local storage</span></a></li>
+          <li><a href="#cross-border-transfer"><span>Cross-border transfer</span></a></li>
+          <li><a href="#changes-to-this-notice"><span>Changes to this notice</span></a></li>
+          <li><a href="#contact-us"><span>Contact us</span></a></li>
+        </ol>
+      </nav>
+
+      <div class="privacy-body">
+        <p class="privacy-lead">
+          We build clothes to your exact measure. That means we hold personal details you have
+          trusted us with — and this notice sets out, <em>in plain language</em>, what we keep,
+          why, and the rights you hold over it under Thailand's Personal Data Protection Act (PDPA).
+        </p>
+
+        <section class="privacy-section" id="intro">
+          <h2><span class="num">01</span> Introduction</h2>
+          <p>
+            Country Road Fashions is a bespoke tailoring house based in Bangkok. This notice
+            explains how we handle your personal data across our website, our fitting rooms, and
+            our order records. It applies whenever you browse, create an account, save
+            measurements, or book a consultation with us.
+          </p>
+        </section>
+
+        <section class="privacy-section" id="who-we-are">
+          <h2><span class="num">02</span> Who we are</h2>
+          <!-- TODO[WT-4-execution]: registered business entity + Bangkok address from spec §11 -->
+          <p>
+            We are the data controller for the information described here. Our registered business
+            entity and Bangkok atelier address will be confirmed in this section before launch
+            (pending spec §11).
+          </p>
+        </section>
+
+        <section class="privacy-section" id="what-we-collect">
+          <h2><span class="num">03</span> What we collect</h2>
+          <ul>
+            <li><strong>Identity &amp; contact</strong> — your name, email address, and phone number.</li>
+            <li><strong>Account credentials</strong> — your email and a hashed password, held by our authentication provider. We never see your password.</li>
+            <li><strong>Measurements &amp; fit preferences</strong> — body measurements, reference-garment measurements, and any notes you choose to save.</li>
+            <li><strong>Communication preferences</strong> — your newsletter opt-in status and the moment consent was given.</li>
+            <li><strong>Consultation bookings</strong> — appointment details passed to our scheduling provider.</li>
+            <li><strong>Cart contents</strong> — held in your browser only; nothing reaches us until you complete a purchase.</li>
+            <li><strong>Technical data</strong> — authentication tokens kept in your browser's localStorage, plus standard server access logs.</li>
+          </ul>
+        </section>
+
+        <section class="privacy-section" id="why-we-collect">
+          <h2><span class="num">04</span> Why we collect it</h2>
+          <p>Each category rests on a lawful basis under the PDPA:</p>
+          <ul>
+            <li><strong>Contract performance</strong> — to take your measurements, fulfil your order, and deliver the garments you commission.</li>
+            <li><strong>Consent</strong> — for newsletter communications and any optional marketing, which you may withdraw at any time.</li>
+            <li><strong>Legitimate interest</strong> — to keep the service secure and to maintain accurate business records.</li>
+          </ul>
+        </section>
+
+        <section class="privacy-section" id="who-we-share-with">
+          <h2><span class="num">05</span> Who we share it with</h2>
+          <p>We rely on a small set of sub-processors. We do not sell your data, and we never share it with advertisers.</p>
+          <ul>
+            <li><strong>Supabase</strong> — managed database and authentication. Your data is stored in the Singapore region.</li>
+            <li><strong>Calendly</strong> — consultation scheduling, operated from the United States.</li>
+          </ul>
+        </section>
+
+        <section class="privacy-section" id="how-long-we-keep">
+          <h2><span class="num">06</span> How long we keep it</h2>
+          <ul>
+            <li><strong>Account &amp; measurements</strong> — until you delete your account.</li>
+            <li><strong>Order history</strong> — retained while your account is active. Tax-mandated invoice records may be held for the period required by the Thai Revenue Code, even after account deletion.</li>
+            <li><strong>Newsletter subscription</strong> — until you unsubscribe.</li>
+            <li><strong>Server logs</strong> — 90 days, on a rolling basis.</li>
+          </ul>
+        </section>
+
+        <section class="privacy-section" id="your-rights">
+          <h2><span class="num">07</span> Your rights</h2>
+          <p>
+            Under the PDPA (sections 30–37) you may access your data, correct it, delete it,
+            withdraw consent for marketing, and lodge a complaint with Thailand's Personal Data
+            Protection Committee (PDPC).
+          </p>
+          <p>
+            Once signed in, you can access, correct, and delete your data directly from your
+            account page. To withdraw newsletter consent, use the unsubscribe link in any
+            marketing email.
+          </p>
+        </section>
+
+        <section class="privacy-section" id="cookies-and-local-storage">
+          <h2><span class="num">08</span> Cookies &amp; local storage</h2>
+          <p>
+            We do not use tracking cookies. Your sign-in session and your shopping cart are both
+            stored in your browser's localStorage by the service itself. Because these are strictly
+            necessary for the site to function, no consent banner is required.
+          </p>
+        </section>
+
+        <section class="privacy-section" id="cross-border-transfer">
+          <h2><span class="num">09</span> Cross-border transfer</h2>
+          <p>
+            Your data is stored in Singapore by our database provider. The safeguards of PDPA
+            section 28 apply to this transfer, supported by our provider's contractual commitments
+            to an adequate standard of protection.
+          </p>
+        </section>
+
+        <section class="privacy-section" id="changes-to-this-notice">
+          <h2><span class="num">10</span> Changes to this notice</h2>
+          <p>
+            If we make a material change, we will email account holders before it takes effect, and
+            the “Last updated” date at the top of this page will be revised.
+          </p>
+        </section>
+
+        <section class="privacy-section" id="contact-us">
+          <h2><span class="num">11</span> Contact us</h2>
+          <!-- TODO[WT-4-execution]: data-request contact email from spec §11 -->
+          <p>
+            For any request about your personal data — access, correction, deletion, or a complaint
+            — please write to us. Our dedicated data-request email address will be confirmed here
+            before launch (pending spec §11).
+          </p>
+        </section>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div data-layout="footer" style="min-height:480px;background:var(--color-charcoal);"></div>
+</body>
+</html>
