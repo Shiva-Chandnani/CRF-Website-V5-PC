@@ -2,7 +2,7 @@
 
 Single source of truth for a new chat session to pick up where the previous one left off. Pair this with [CLAUDE.md](CLAUDE.md) (frontend rules) for full context.
 
-> **Last session ended** at: **Phase 1 WT-1 SHIPPED — auth foundation complete, all 13 tasks done** (2026-07-06).
+> **Last session ended** at: **Phase 1 WT-1 + WT-3 SHIPPED** — auth foundation + measurements schema both merged to `main` (2026-07-06). WT-4 (privacy-csp) + WT-2 (auth pages) remain.
 >
 > **Phase 1 design + plans landed on `main`:**
 > - Spec: [docs/superpowers/specs/2026-06-16-phase-1-design.md](docs/superpowers/specs/2026-06-16-phase-1-design.md) (commit `30bebcf`)
@@ -16,8 +16,10 @@ Single source of truth for a new chat session to pick up where the previous one 
 > **🐞 Known regression discovered during WT-1 (NOT auth-related, tracked separately):** Supabase **image transformation is disabled** on the project — `GET /storage/v1/render/image/public/...` returns `403 FeatureNotEnabled` ("feature not enabled for this tenant"). This breaks **all product images site-wide** (shop cards, PDP heroes/thumbs) because `js/data-loader.js` builds render-endpoint URLs. The direct `/storage/v1/object/public/...` endpoint still serves images 200/`image/jpeg`. Also breaks `scripts/test-swatch-prefers-hero.mjs` (its `waitForImg()` hangs on the errored image). **Fix options:** (A) re-enable the Supabase image-transformation add-on, or (B) point `fabricImageUrl`/`productImageUrl` at the direct object endpoint (loses server-side resize). **Owner decision: fix separately from WT-1.**
 >
 > **What's next:**
-> 1. Fix the image-transformation 403 regression (see above) — highest-impact, affects the live site.
-> 2. Wave 1 continues: WT-3 (measurements-schema) + WT-4 (privacy-csp) in parallel, then Wave 2 = WT-2 (auth pages: signup/login/account/privacy).
+> 1. **WT-4 (privacy-csp)** — `privacy.html` + CSP `<meta>` rollout. Plan: `docs/superpowers/plans/2026-06-17-phase-1-wt-4-privacy-csp.md`. Note its puppeteer CSP sweep loads the image-broken shop/product pages (403 below) — verify that doesn't false-positive.
+> 2. Then **WT-2 (auth pages: signup/login/account/privacy)** — depends on WT-1 (done) + WT-3 (done) + WT-4.
+> 3. Fix the image-transformation 403 regression (see below) — highest-impact, affects the live site; deferred by owner.
+> 4. Tiny hygiene: `test-newsletter-submit` flaky race (waits for form existence, not handler bind) and re-enable email confirmation + SMTP before launch.
 >
 > **Phase 1 agentic cycle reference:** `superpowers:brainstorming` → `superpowers:writing-plans` → `superpowers:using-git-worktrees` → `superpowers:subagent-driven-development` → `superpowers:verification-before-completion` → `superpowers:requesting-code-review` → `superpowers:finishing-a-development-branch`. Full methodology: `~/.claude/plans/just-to-revamp-the-agile-sundae.md`. Phase 0 retrospective notes live at the end of [§7](#7-open--next-steps) under "Phase 0 — shipped".
 
@@ -393,6 +395,28 @@ Shared spine landed. Every existing page now mounts `components/header.html` + `
   re-enable + add SMTP before launch. Auth test emails use
   `@test.countryroadfashions.com` (reserved-domain blocklist rejects
   `example.com`/`.test`).
+
+### Phase 1 WT-3 — measurements schema (SHIPPED 2026-07-06)
+
+- **DB** `db/09_measurements.sql` — 4 narrow typed tables
+  (`customer_body_measurements`, `customer_jacket_reference`,
+  `customer_shirt_reference`, `customer_pants_reference`), all measurement
+  columns `numeric(5,2)` nullable, `customer_id → profiles(id) on delete
+  cascade`. 16 owner-only RLS policies (`auth.uid() = customer_id`). 4
+  `v_latest_*` views (`distinct on (customer_id)` newest by `captured_at`).
+  Idempotent; applied live.
+- **Views use `security_invoker = true`** (PG15+) so base-table RLS applies to
+  the querying user. Without it the views bypass RLS and leak every customer's
+  row — a bug caught by `test-measurements-rls` and fixed before merge.
+- **Tests** `test-measurements-rls` (2 users × 4 tables + 4 views),
+  `test-measurements-views` (DISTINCT ON newest), `test-measurements-cascade`
+  (auth.users → profiles → 4 tables) — all green. Additive-only worktree; no
+  JS/HTML touched.
+- **Out of scope:** measurement-capture UI + `js/profile.js` (WT-2), unit
+  toggle (Phase 2). Append-only is a WT-2 convention; the UPDATE policy is
+  intentionally permissive per spec §5.2.
+- **Known Phase 0 flake (unrelated):** `test-newsletter-submit` races the
+  form-handler bind vs. submit dispatch — see top-banner tracked items.
 
 **Architectural notes for later phases:**
 - The CSP meta tag was NOT added in Phase 0 (deferred to Phase 3 hardening per spec). Phase 3 should add it to `components/header.html` since `<meta http-equiv="Content-Security-Policy">` in a fetched HTML fragment IS honored by browsers if it appears before any external resource loads, but it's safer to add it directly to each page's `<head>` until Phase 3.
