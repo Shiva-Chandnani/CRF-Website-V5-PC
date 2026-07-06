@@ -2,20 +2,22 @@
 
 Single source of truth for a new chat session to pick up where the previous one left off. Pair this with [CLAUDE.md](CLAUDE.md) (frontend rules) for full context.
 
-> **Last session ended** at: **Phase 1 WT-1 in flight — Tasks 2–8 committed, Task 9 BLOCKED on Supabase email validation** (2026-06-19).
+> **Last session ended** at: **Phase 1 WT-1 SHIPPED — auth foundation complete, all 13 tasks done** (2026-07-06).
 >
 > **Phase 1 design + plans landed on `main`:**
 > - Spec: [docs/superpowers/specs/2026-06-16-phase-1-design.md](docs/superpowers/specs/2026-06-16-phase-1-design.md) (commit `30bebcf`)
 > - 4 plans: `docs/superpowers/plans/2026-06-17-phase-1-wt-{1,2,3,4}-*.md` (commit `54a9cf6`)
-> - 2 plan errata fixes (committed during WT-1 execution): `ffc27ca` (SQL `name[] vs text[]` cast in FK re-assert), `fcb7048` (Supabase query-builder `.catch()` → try/catch)
+> - 3 plan errata fixes (committed during WT-1 execution): `ffc27ca` (SQL `name[] vs text[]` cast in FK re-assert), `fcb7048` (Supabase query-builder `.catch()` → try/catch), and the `test-auth-guards` request-interception allow-list (must permit both `__probe-*` pages, not just `__probe-guard`).
 >
-> **WT-1 worktree state:** branch `phase-1/auth-foundation` in `.worktrees/phase-1/auth-foundation/` (worktree directory is gitignored). 7 commits made (`99c1579` → `0d955e9`): db/08_profiles.sql APPLIED to live Supabase, profiles RLS verified, trigger backfill verified, delete_my_account RPC verified, js/auth.js shipped, exports surface unit-tested. **One uncommitted file:** `scripts/test-auth-roundtrip.mjs` (Task 9). The browser-side public `auth.signUp()` is rejected with "Email address invalid" for both `@example.test` and `@example.com` — see [memory](../../.claude/projects/-Users-shivachandnani-Desktop-CRF-Website-V5---ProperCloth/memory/project_phase1_wt1_state.md) for resume instructions.
+> **WT-1 result:** branch `phase-1/auth-foundation` — `db/08_profiles.sql` applied to live Supabase (profiles + RLS + `handle_new_user` trigger + `delete_my_account` RPC + newsletter FK `on delete set null`), `js/auth.js` shipped with the full spec §6.1 surface + header `[data-account-link]` auto-swap. 7 test scripts (`test-profile-rls`, `test-trigger-newsletter-backfill`, `test-delete-rpc`, `test-auth-module-shape`, `test-auth-roundtrip`, `test-auth-guards`, `test-header-account-swap`) all green.
 >
-> **What's next — to resume WT-1:**
-> 1. Either disable Supabase Auth email-domain blocking (dashboard → Authentication → Providers → Email settings), OR provide a real domain (e.g. `test.countryroadfashions.com`) and update line 22 of the test.
-> 2. From the worktree, run `node serve.mjs &` (from worktree root) + `node scripts/test-auth-roundtrip.mjs`. If green, commit with `git add scripts/test-auth-roundtrip.mjs && git commit -m "Phase 1 WT-1: test-auth-roundtrip end-to-end auth flow"`.
-> 3. Continue with Tasks 10 (auth-guards), 11 (header-account-swap), 12 (full test sweep), 13 (PROJECT.md update + PR). All three remaining tests use admin-API createUser so likely won't hit the same email-validation block.
-> 4. After WT-1 ships, Wave 1 continues with WT-3 (measurements-schema) + WT-4 (privacy-csp) in parallel.
+> **⚙️ Config change made during WT-1 (production-relevant):** Supabase Auth **email confirmation is now DISABLED** (`mailer_autoconfirm = true`) — required to make the public-`signUp` roundtrip test deterministic (the built-in mailer is rate-limited to ~2/hr; `@example.com`/`.test` are also on the reserved-domain blocklist, so tests use `@test.countryroadfashions.com`). **Re-enable email confirmation + configure custom SMTP before production launch** (tracked for Phase 2/pre-launch).
+>
+> **🐞 Known regression discovered during WT-1 (NOT auth-related, tracked separately):** Supabase **image transformation is disabled** on the project — `GET /storage/v1/render/image/public/...` returns `403 FeatureNotEnabled` ("feature not enabled for this tenant"). This breaks **all product images site-wide** (shop cards, PDP heroes/thumbs) because `js/data-loader.js` builds render-endpoint URLs. The direct `/storage/v1/object/public/...` endpoint still serves images 200/`image/jpeg`. Also breaks `scripts/test-swatch-prefers-hero.mjs` (its `waitForImg()` hangs on the errored image). **Fix options:** (A) re-enable the Supabase image-transformation add-on, or (B) point `fabricImageUrl`/`productImageUrl` at the direct object endpoint (loses server-side resize). **Owner decision: fix separately from WT-1.**
+>
+> **What's next:**
+> 1. Fix the image-transformation 403 regression (see above) — highest-impact, affects the live site.
+> 2. Wave 1 continues: WT-3 (measurements-schema) + WT-4 (privacy-csp) in parallel, then Wave 2 = WT-2 (auth pages: signup/login/account/privacy).
 >
 > **Phase 1 agentic cycle reference:** `superpowers:brainstorming` → `superpowers:writing-plans` → `superpowers:using-git-worktrees` → `superpowers:subagent-driven-development` → `superpowers:verification-before-completion` → `superpowers:requesting-code-review` → `superpowers:finishing-a-development-branch`. Full methodology: `~/.claude/plans/just-to-revamp-the-agile-sundae.md`. Phase 0 retrospective notes live at the end of [§7](#7-open--next-steps) under "Phase 0 — shipped".
 
@@ -368,6 +370,29 @@ Shared spine landed. Every existing page now mounts `components/header.html` + `
 - Footer bottom-row Privacy link points to `privacy.html` — Phase 1 creates that page.
 - `js/meta.js` `setMeta()` is a no-op — Phase 3 fills it.
 - `newsletter_subscribers.profile_id` is nullable; Phase 1 backfills it when a signup uses an already-captured email.
+
+### Phase 1 WT-1 — auth foundation (SHIPPED 2026-07-06)
+
+- **DB** `db/08_profiles.sql` — `profiles` table + RLS (owner-only select/update),
+  `handle_new_user` trigger (mirrors `auth.users.email`, backfills
+  `newsletter_subscribers.profile_id`, inserts newsletter row on opt-in),
+  `delete_my_account()` RPC, `newsletter_subscribers.profile_id` re-asserted as
+  `on delete set null`. Idempotent; applied live via `scripts/run-sql.mjs`.
+- **JS** `js/auth.js` — public API per Phase 1 spec §6.1: `getSession`,
+  `getUser`, `onAuthChange`, `signUp`, `signInWithPassword`, `signOut`,
+  `resetPasswordForEmail`, `updatePassword`, `requireAuth`, `requireGuest`,
+  `deleteAccount`. Auto-mounts header `[data-account-link]` swap on
+  `crf:layout-ready` (signed-out → `/login.html`, signed-in → `/account.html`).
+- **Tests** `test-profile-rls`, `test-trigger-newsletter-backfill`,
+  `test-delete-rpc`, `test-auth-module-shape`, `test-auth-roundtrip`,
+  `test-auth-guards`, `test-header-account-swap` — all green. Phase 0 suite
+  green **except** `test-swatch-prefers-hero`, which is red due to the
+  image-transformation 403 regression (see top banner), not WT-1.
+- **Config side-effects (see top banner):** Supabase email confirmation
+  disabled (`mailer_autoconfirm = true`) for deterministic auth tests —
+  re-enable + add SMTP before launch. Auth test emails use
+  `@test.countryroadfashions.com` (reserved-domain blocklist rejects
+  `example.com`/`.test`).
 
 **Architectural notes for later phases:**
 - The CSP meta tag was NOT added in Phase 0 (deferred to Phase 3 hardening per spec). Phase 3 should add it to `components/header.html` since `<meta http-equiv="Content-Security-Policy">` in a fetched HTML fragment IS honored by browsers if it appears before any external resource loads, but it's safer to add it directly to each page's `<head>` until Phase 3.
