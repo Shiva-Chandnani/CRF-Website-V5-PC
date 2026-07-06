@@ -2,7 +2,7 @@
 
 Single source of truth for a new chat session to pick up where the previous one left off. Pair this with [CLAUDE.md](CLAUDE.md) (frontend rules) for full context.
 
-> **Last session ended** at: **Phase 1 WT-1 + WT-3 + WT-4 SHIPPED** — auth foundation, measurements schema, and privacy page + CSP baseline all on `main` (2026-07-06). Only **WT-2 (auth pages: signup/login/forgot/reset/account)** remains in Phase 1. ⚠️ `privacy.html` has two `TODO[WT-4-execution]` placeholders (business entity/address + data-request email) that need real values before launch.
+> **Last session ended** at: **Phase 1 WT-1 + WT-3 + WT-4 SHIPPED** — auth foundation, measurements schema, and privacy page + CSP baseline all on `main` (2026-07-06). Only **WT-2 (auth pages: signup/login/forgot/reset/account)** remains in Phase 1. `privacy.html` is fully populated (business entity/address + contact email supplied by owner 2026-07-06).
 >
 > **Phase 1 design + plans landed on `main`:**
 > - Spec: [docs/superpowers/specs/2026-06-16-phase-1-design.md](docs/superpowers/specs/2026-06-16-phase-1-design.md) (commit `30bebcf`)
@@ -17,8 +17,7 @@ Single source of truth for a new chat session to pick up where the previous one 
 >
 > **What's next:**
 > 1. **WT-2 (auth pages)** — signup/login/forgot-password/reset-password/account pages wiring `js/auth.js` (WT-1) + `js/profile.js` (measurements from WT-3). Plan: `docs/superpowers/plans/2026-06-17-phase-1-wt-2-auth-pages.md`. Must add the WT-4 `<head>` CSP block to each new page and extend `scripts/test-csp-compliance.mjs`'s `PAGES` list. Completes Phase 1.
-> 2. Fill `privacy.html`'s two `TODO[WT-4-execution]` placeholders (business entity/address + data-request email).
-> 3. Pre-launch (Phase 2): re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + configure custom SMTP; move `frame-ancestors`/clickjacking protection into an HTTP header (Phase 3 CSP hardening).
+> 2. Pre-launch (Phase 2): re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + configure custom SMTP; move `frame-ancestors`/clickjacking protection into an HTTP header (Phase 3 CSP hardening).
 >
 > **Phase 1 agentic cycle reference:** `superpowers:brainstorming` → `superpowers:writing-plans` → `superpowers:using-git-worktrees` → `superpowers:subagent-driven-development` → `superpowers:verification-before-completion` → `superpowers:requesting-code-review` → `superpowers:finishing-a-development-branch`. Full methodology: `~/.claude/plans/just-to-revamp-the-agile-sundae.md`. Phase 0 retrospective notes live at the end of [§7](#7-open--next-steps) under "Phase 0 — shipped".
 
@@ -423,9 +422,8 @@ Shared spine landed. Every existing page now mounts `components/header.html` + `
   banner, all 12 anchor IDs, sticky spec-sheet TOC (≥1024px) / bordered docket
   (<1024px), brand type/palette from `css/base.css`, print + reduced-motion
   rules. Mounts the shared dark header/footer via `data-layout` slots.
-  **⚠️ Two placeholders still need real values before launch** (marked
-  `TODO[WT-4-execution]`): registered business entity + Bangkok address (§2),
-  and the data-request contact email (§11) — pending spec §11.
+  Owner-supplied entity + Bangkok address (§2) and data-request email (§11,
+  `Countryroadfashions@gmail.com`) filled 2026-07-06 — no placeholders remain.
 - **CSP baseline** — `<meta http-equiv="Content-Security-Policy">` added to the
   `<head>` of the 6 existing pages + `privacy.html` (spec §8.2). Policy allows
   self + esm.sh + Calendly (script), Google Fonts (style/font), Supabase
