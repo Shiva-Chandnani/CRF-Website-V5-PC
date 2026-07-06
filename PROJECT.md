@@ -2,7 +2,7 @@
 
 Single source of truth for a new chat session to pick up where the previous one left off. Pair this with [CLAUDE.md](CLAUDE.md) (frontend rules) for full context.
 
-> **Last session ended** at: **Phase 1 WT-1 + WT-3 SHIPPED** — auth foundation + measurements schema both merged to `main` (2026-07-06). WT-4 (privacy-csp) + WT-2 (auth pages) remain.
+> **Last session ended** at: **Phase 1 WT-1 + WT-3 + WT-4 SHIPPED** — auth foundation, measurements schema, and privacy page + CSP baseline all on `main` (2026-07-06). Only **WT-2 (auth pages: signup/login/forgot/reset/account)** remains in Phase 1. ⚠️ `privacy.html` has two `TODO[WT-4-execution]` placeholders (business entity/address + data-request email) that need real values before launch.
 >
 > **Phase 1 design + plans landed on `main`:**
 > - Spec: [docs/superpowers/specs/2026-06-16-phase-1-design.md](docs/superpowers/specs/2026-06-16-phase-1-design.md) (commit `30bebcf`)
@@ -16,9 +16,9 @@ Single source of truth for a new chat session to pick up where the previous one 
 > **✅ Image-transformation 403 — RESOLVED 2026-07-06.** Earlier the Supabase `render/image` endpoint returned `403 FeatureNotEnabled`, breaking all product images site-wide (`js/data-loader.js` builds render-endpoint URLs). Owner upgraded to **Supabase Pro + enabled Image Transformation** (Storage → Settings). Verified: render endpoint `200 image/jpeg` (widths 140/200/1400), shop + PDP images render, `scripts/test-swatch-prefers-hero.mjs` green. Full Phase 0 image gate restored.
 >
 > **What's next:**
-> 1. **WT-4 (privacy-csp)** — `privacy.html` + CSP `<meta>` rollout. Plan: `docs/superpowers/plans/2026-06-17-phase-1-wt-4-privacy-csp.md`.
-> 2. Then **WT-2 (auth pages: signup/login/account/privacy)** — depends on WT-1 (done) + WT-3 (done) + WT-4.
-> 3. Pre-launch (Phase 2): re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + configure custom SMTP.
+> 1. **WT-2 (auth pages)** — signup/login/forgot-password/reset-password/account pages wiring `js/auth.js` (WT-1) + `js/profile.js` (measurements from WT-3). Plan: `docs/superpowers/plans/2026-06-17-phase-1-wt-2-auth-pages.md`. Must add the WT-4 `<head>` CSP block to each new page and extend `scripts/test-csp-compliance.mjs`'s `PAGES` list. Completes Phase 1.
+> 2. Fill `privacy.html`'s two `TODO[WT-4-execution]` placeholders (business entity/address + data-request email).
+> 3. Pre-launch (Phase 2): re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + configure custom SMTP; move `frame-ancestors`/clickjacking protection into an HTTP header (Phase 3 CSP hardening).
 >
 > **Phase 1 agentic cycle reference:** `superpowers:brainstorming` → `superpowers:writing-plans` → `superpowers:using-git-worktrees` → `superpowers:subagent-driven-development` → `superpowers:verification-before-completion` → `superpowers:requesting-code-review` → `superpowers:finishing-a-development-branch`. Full methodology: `~/.claude/plans/just-to-revamp-the-agile-sundae.md`. Phase 0 retrospective notes live at the end of [§7](#7-open--next-steps) under "Phase 0 — shipped".
 
@@ -416,6 +416,37 @@ Shared spine landed. Every existing page now mounts `components/header.html` + `
   intentionally permissive per spec §5.2.
 - **Known Phase 0 flake (unrelated):** `test-newsletter-submit` races the
   form-handler bind vs. submit dispatch — see top-banner tracked items.
+
+### Phase 1 WT-4 — privacy page + CSP baseline (SHIPPED 2026-07-06)
+
+- **New page** `privacy.html` — PDPA-compliant notice: 11 numbered clauses +
+  banner, all 12 anchor IDs, sticky spec-sheet TOC (≥1024px) / bordered docket
+  (<1024px), brand type/palette from `css/base.css`, print + reduced-motion
+  rules. Mounts the shared dark header/footer via `data-layout` slots.
+  **⚠️ Two placeholders still need real values before launch** (marked
+  `TODO[WT-4-execution]`): registered business entity + Bangkok address (§2),
+  and the data-request contact email (§11) — pending spec §11.
+- **CSP baseline** — `<meta http-equiv="Content-Security-Policy">` added to the
+  `<head>` of the 6 existing pages + `privacy.html` (spec §8.2). Policy allows
+  self + esm.sh + Calendly (script), Google Fonts (style/font), Supabase
+  (img/connect/ws), placehold.co (img), inline (`'unsafe-inline'`).
+- **Two deliberate deviations from the WT-4 plan:**
+  1. **Dropped `frame-ancestors 'none'`** from the meta block — browsers ignore
+     it when delivered via `<meta>` and log a console error (which the sweep's
+     matcher would treat as a false violation). Clickjacking protection must be
+     an **HTTP response header** — deferred to Phase 3 CSP hardening / host config.
+  2. **Skipped the `components/header.html` CSP copy** (plan Task 6) — `js/layout.js`
+     injects the fragment into the `<body>`, where an http-equiv CSP `<meta>` is
+     ignored. The per-page `<head>` CSP is authoritative. (This supersedes the
+     Phase 0 note below suggesting the header fragment could carry CSP.)
+- **Footer** Privacy link rewired `privacy.html` → `/privacy.html` (absolute).
+- **Tests** `test-csp-compliance` (7-page zero-violation sweep) +
+  `test-privacy-page` (12 anchors, H1, brand voice, dates, footer link, CSP) —
+  green. Phase 0 functional suite (layout-mount, newsletter, customizer,
+  hero-rail, swatch) + token-discipline all green with CSP active.
+- **WT-2 hook:** when WT-2 ships signup/login/forgot/reset/account, add the same
+  `<head>` CSP block to each and extend the `PAGES` array in
+  `scripts/test-csp-compliance.mjs`.
 
 **Architectural notes for later phases:**
 - The CSP meta tag was NOT added in Phase 0 (deferred to Phase 3 hardening per spec). Phase 3 should add it to `components/header.html` since `<meta http-equiv="Content-Security-Policy">` in a fetched HTML fragment IS honored by browsers if it appears before any external resource loads, but it's safer to add it directly to each page's `<head>` until Phase 3.
