@@ -42,6 +42,15 @@ async function waitLayoutReady(page) {
   }));
   if (!ready) throw new Error('crf:layout-ready never fired');
   await page.waitForSelector('[data-newsletter-form] input[type="email"]', { timeout: 5000 });
+  // Wait until js/newsletter.js has actually BOUND its submit handler — it sets
+  // form.dataset.newsletterBound = '1' in init(). Dispatching submit before the
+  // handler binds lets the native form submission navigate the page (the footer
+  // unmounts, no .newsletter-success ever appears) — the source of this test's
+  // intermittent 8s timeouts.
+  await page.waitForFunction(
+    () => document.querySelector('[data-newsletter-form]')?.dataset.newsletterBound === '1',
+    { timeout: 5000 }
+  );
 }
 
 async function submitEmail(page, email) {
