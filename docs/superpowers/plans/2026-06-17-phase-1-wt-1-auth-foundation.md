@@ -203,7 +203,7 @@ begin
     from pg_constraint
    where conrelid = 'public.newsletter_subscribers'::regclass
      and contype  = 'f'
-     and (select array_agg(attname) from pg_attribute
+     and (select array_agg(attname::text) from pg_attribute
             where attrelid = conrelid and attnum = any(conkey)) = array['profile_id'];
 
   if fk_name is not null then
@@ -444,7 +444,7 @@ try {
 } finally {
   if (user) await admin.auth.admin.deleteUser(user.id).catch(() => {});
   // Newsletter row's profile_id is now null again (FK on delete set null); remove the row.
-  await admin.from('newsletter_subscribers').delete().eq('email', email).catch(() => {});
+  try { await admin.from('newsletter_subscribers').delete().eq('email', email); } catch {}
 }
 
 if (failed) {
@@ -553,7 +553,7 @@ try {
   console.error('Test threw:', e.message);
 } finally {
   if (userId) await admin.auth.admin.deleteUser(userId).catch(() => {});
-  await admin.from('newsletter_subscribers').delete().eq('email', email).catch(() => {});
+  try { await admin.from('newsletter_subscribers').delete().eq('email', email); } catch {}
 }
 
 if (failed) {
