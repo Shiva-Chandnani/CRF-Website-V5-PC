@@ -39,8 +39,14 @@ A static HTML/CSS/vanilla-JS website for **Country Road Fashions** — a Bangkok
 | `/cart.html` | [cart.html](cart.html) | Cart page — lists line items with full customisation spec sheet; CTA passes spec into the consultation form |
 | `/book-appointment.html` | [book-appointment.html](book-appointment.html) | In-person / online consultation booking (Calendly embed placeholders) |
 | `/in-store.html` | [in-store.html](in-store.html) | Bangkok atelier, trunk shows, virtual consultation info |
+| `/privacy.html` | [privacy.html](privacy.html) | PDPA privacy notice (Phase 1 WT-4) — 11 numbered clauses + sticky TOC |
+| `/signup.html` | [signup.html](signup.html) | Create account (Phase 1 WT-2). Branches on session: lands on `/account.html` (confirmation off) or `/login.html?check_email=1` (confirmation on) |
+| `/login.html` | [login.html](login.html) | Sign in (Phase 1 WT-2) — check_email/confirmed/reset status banners; honors `?next=` |
+| `/forgot-password.html` | [forgot-password.html](forgot-password.html) | Constant-time reset request (Phase 1 WT-2) |
+| `/reset-password.html` | [reset-password.html](reset-password.html) | Set new password from recovery link (Phase 1 WT-2) |
+| `/account.html` | [account.html](account.html) | Signed-in account (Phase 1 WT-2) — profile edit + measurement stubs + delete-account modal. `requireAuth` gated |
 
-Start dev server: `node serve.mjs` (port 3000). Don't start a second instance if already running.
+Start dev server: `node serve.mjs` (port 3000). Don't start a second instance if already running. **Auth pages + `js/auth.js`/`js/profile.js` require `@supabase/supabase-js` (installed `--no-save`) and load it in the browser from esm.sh.**
 
 ---
 
@@ -53,28 +59,32 @@ Start dev server: `node serve.mjs` (port 3000). Don't start a second instance if
   - `SUPABASE_SERVICE_ROLE_KEY` — for writing data + uploading to Storage via REST
   - `PGHOST` / `PGPORT` / `PGDATABASE` / `PGUSER` / `PGPASSWORD` — direct Postgres access via the pooler (used by `scripts/run-sql.mjs` for DDL)
 
-### Schema (12 tables + 2 views)
+### Schema (catalogue + identity + measurements)
 
-See [db/schema.sql](db/schema.sql) for the canonical definition, plus the migration files in [db/](db/) for everything added since. High-level:
+See [db/schema.sql](db/schema.sql) for the original catalogue definition, plus the numbered migration files in [db/](db/) for everything added since (Phase 0 `07_`, Phase 1 `08_`/`09_`). High-level:
 
 ```
+CATALOGUE (Phase -1 / ongoing):
 categories ─ subcategories ─ item_types ┐
                                         ├─ item_type_fabrics ── fabric_types ── fabric_designs ── fabric_design_photos
-                                        │  (junction; holds PRICE + (item × fabric) hero paths)         (one row per
-                                        │                                                                fabric closeup
-                                        │                                                                + per-design heroes;
-                                        │                                                                photo_type col)
+                                        │  (junction; holds PRICE + (item × fabric) hero paths)
                                         └── item_type_photos (lookbook per cut, currently unused)
-
 fabric_design_price_overrides — rare per-(item,design) overrides
+customization_categories ─ customization_options ─ item_type_customization_categories  (see §10)
+v_products / v_customization_catalog — catalogue views
 
-Customization (see §10):
-  customization_categories ─ customization_options
-                          └─ item_type_customization_categories (junction)
+IDENTITY + MARKETING (Phase 0/1):
+newsletter_subscribers (Phase 0; email pk, profile_id FK ON DELETE SET NULL)
+profiles (Phase 1 WT-1; pk → auth.users, email/full_name/phone/role/opted_in_newsletter…)
+  ↳ handle_new_user() trigger on auth.users insert · delete_my_account() RPC · owner-only RLS
 
-v_products              — view; one row per (item × design) with resolved price + all photo paths + design_hero_paths[]
-v_customization_catalog — view; one row per (item × category × option) for the drawer
+MEASUREMENTS (Phase 1 WT-3; owner-only RLS, cascade from profiles):
+customer_body_measurements · customer_jacket_reference · customer_shirt_reference · customer_pants_reference
+v_latest_body_measurements · v_latest_jacket_reference · v_latest_shirt_reference · v_latest_pants_reference
+  (DISTINCT ON newest; security_invoker=true so base-table RLS applies)
 ```
+
+**Auth:** Supabase Auth. Email confirmation currently DISABLED (`mailer_autoconfirm=true`) — re-enable + SMTP before launch. `js/auth.js` (WT-1) is the client wrapper; `js/profile.js` (WT-2) is profile/measurement CRUD.
 
 **Key conventions**
 - IDs are slugs (`formal-suit-2-piece`, `cavani-wool`, `cavani-wool-navy-pinstripe`).
@@ -116,31 +126,38 @@ Two public buckets:
 
 ```
 /
-├── index.html, shop.html, product.html, book-appointment.html, in-store.html, cart.html
+├── index.html, shop.html, product.html, book-appointment.html, in-store.html, cart.html   # catalogue pages
+├── privacy.html                  # Phase 1 WT-4 — PDPA notice
+├── signup.html, login.html, forgot-password.html, reset-password.html, account.html        # Phase 1 WT-2 — auth
 ├── serve.mjs                     # localhost:3000 dev server (vanilla node http)
-├── screenshot.mjs                # puppeteer screenshot → temporary screenshots/screenshot-N[-label].png
-├── package.json                  # deps: puppeteer, pg
+├── screenshot.mjs                # puppeteer screenshot → temporary screenshots/screenshot-N[-label].png (1440×900)
+├── package.json                  # deps: puppeteer, pg. NOTE: @supabase/supabase-js installed --no-save (not in package.json)
 ├── .env.local                    # gitignored — Supabase URL + anon + service_role + PG* vars
-├── .gitignore                    # excludes node_modules, .env*, .DS_Store, .claude/, temporary screenshots/
+├── .gitignore                    # excludes node_modules, .env*, .DS_Store, .claude/, .worktrees/, temporary screenshots/
+│
+├── components/                   # Phase 0 — header.html + footer.html (fetched + mounted at runtime by js/layout.js into [data-layout] slots)
+├── css/base.css                  # Phase 0 — token vocabulary, .btn--* system, .field/.input form controls, header/footer styles
 │
 ├── js/
 │   ├── data-loader.js            # @supabase/supabase-js client + getCategories / fabricImageUrl / productImageUrl
 │   ├── cart.js                   # localStorage cart (`crf.cart.v1`) — CRUD + header-badge updater, auto-mounts
-│   ├── customizer.js             # "Customize Your Suit" drawer — list/detail views, monogram special-case, lazy-loaded on first click
-│   └── schema.d.ts               # TypeScript types matching the schema (IDE only; not auto-generated)
+│   ├── customizer.js             # "Customize Your Suit" drawer — lazy-loaded on first click
+│   ├── layout.js                 # Phase 0 — fetch-injects components/ into [data-layout] slots; fires crf:layout-ready
+│   ├── newsletter.js             # Phase 0 — footer form → newsletter_subscribers (sets form.dataset.newsletterBound)
+│   ├── meta.js                   # Phase 0 — setMeta() no-op skeleton (Phase 3 fills it)
+│   ├── auth.js                   # Phase 1 WT-1 — Supabase Auth wrapper (spec §6.1) + header account-link swap; imports supabase from esm.sh (browser-only)
+│   ├── profile.js                # Phase 1 WT-2 — getMyProfile/updateMyProfile + getLatestMeasurements/saveMeasurements (last two: Phase 2 UI). client() lazily imports auth.js
+│   └── schema.d.ts               # TypeScript types (IDE only; NOT updated for profiles/measurements — stale)
 │
 ├── assets/customization/svg/     # 65 placeholder line-art SVGs (one per customization option)
 │
 ├── db/
-│   ├── schema.sql                # historical canonical schema (DO NOT rerun — see §8)
-│   ├── seed.sql                  # historical Cavani seed (3 designs)
-│   ├── migration-hero-photos.sql        # +hero_image_path on item_type_fabrics; recreate v_products
-│   ├── migration-vbc-wool.sql           # +VBC fabric type + 3 item_type_fabrics rows
-│   ├── migration-vbc-hero.sql           # wire item × fabric hero paths for VBC Suit
-│   ├── migration-customization-schema.sql      # 3 new tables + v_customization_catalog view + RLS
-│   ├── migration-customization-seed-suit.sql   # 21 categories + 65 options + 21 junction rows
-│   ├── migration-design-hero-photos.sql        # +photo_type column on fabric_design_photos; recreate v_products w/ design_hero_paths
-│   └── README.md                 # initial Supabase setup guide (one-time onboarding)
+│   ├── schema.sql + seed.sql            # historical catalogue (DO NOT rerun — see §8)
+│   ├── migration-*.sql                  # catalogue migrations (hero photos, VBC, customization, design heroes)
+│   ├── 07_newsletter_subscribers.sql    # Phase 0 — newsletter capture table + RLS
+│   ├── 08_profiles.sql                  # Phase 1 WT-1 — profiles + RLS + handle_new_user trigger + delete_my_account RPC
+│   ├── 09_measurements.sql              # Phase 1 WT-3 — 4 measurement tables + 16 RLS policies + 4 v_latest_* views (security_invoker)
+│   └── README.md                        # initial Supabase setup guide (one-time onboarding)
 │
 ├── scripts/
 │   ├── run-sql.mjs                          # run any SQL file against the pooler (use for migrations)
@@ -151,10 +168,17 @@ Two public buckets:
 │   ├── pad-vbc-hero-photos.mjs              # one-shot: pad VBC item × fabric heroes
 │   ├── upload-vbc-design-heroes.mjs         # one-shot: 18 VBC per-design hero PNGs + photo rows
 │   ├── pad-vbc-design-heroes.mjs            # one-shot: pad all 18 per-design heroes to 1054/1656 + re-upload
-│   ├── generate-customization-svgs.mjs      # one-shot: emit 65 placeholder SVGs into assets/customization/svg/
-│   ├── test-customizer-flow.mjs             # puppeteer smoke test: open drawer → select option → add to cart → cart.html
-│   ├── test-design-hero-rail.mjs            # puppeteer smoke test: rail renders 3 thumbs + swaps on design change
-│   └── test-swatch-prefers-hero.mjs         # puppeteer smoke test: swatch click → main image = hero #2
+│   ├── generate-customization-svgs.mjs      # one-shot: emit 65 placeholder SVGs
+│   ├── run-sql.mjs                           # run any SQL file against the pooler (use for migrations)
+│   │  # ── TEST SUITE (all green on main; run with serve.mjs up from repo root) ──
+│   ├── test-customizer-flow / -design-hero-rail / -swatch-prefers-hero   # Phase 0 catalogue UI
+│   ├── test-layout-mount / -newsletter-submit / -token-discipline        # Phase 0 spine
+│   ├── test-csp-compliance.mjs              # Phase 1 — 12-page CSP zero-violation sweep (extend PAGES for new pages)
+│   ├── test-auth-* / test-profile-rls / test-trigger-newsletter-backfill / test-delete-rpc   # WT-1 auth
+│   ├── test-measurements-{rls,views,cascade}.mjs                         # WT-3 measurements
+│   ├── test-privacy-page.mjs                # WT-4 privacy
+│   └── test-{profile-module,signup-flow,forgot-reset,account-profile-crud,account-delete,route-guards}.mjs  # WT-2 auth pages
+│      # NOTE: test scripts read .env.local manually (no dotenv). Auth tests use admin createUser (bypasses email blocklist).
 │
 ├── brand_assets/
 │   ├── CRF Logo.png
