@@ -8,9 +8,7 @@ import process from 'node:process';
 
 const BASE = process.env.CRF_BASE_URL || 'http://localhost:3000';
 
-// Pages that exist on this worktree after WT-4 lands.
-// DO NOT add signup/login/forgot/reset/account here — they do not exist yet.
-// WT-2's plan adds them to this list when it ships those pages.
+// Every page that carries the Phase 1 CSP <meta>. WT-2 added the 5 auth pages.
 const PAGES = [
   '/index.html',
   '/shop.html',
@@ -19,6 +17,11 @@ const PAGES = [
   '/book-appointment.html',
   '/in-store.html',
   '/privacy.html',
+  '/signup.html',
+  '/login.html',
+  '/forgot-password.html',
+  '/reset-password.html',
+  '/account.html',
 ];
 
 function isCspViolation(text) {
