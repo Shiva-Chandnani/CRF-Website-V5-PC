@@ -2,7 +2,7 @@
 
 Single source of truth for a new chat session to pick up where the previous one left off. Pair this with [CLAUDE.md](CLAUDE.md) (frontend rules) for full context.
 
-> **Last session ended** at: **Phase 1 WT-1 + WT-3 + WT-4 SHIPPED** — auth foundation, measurements schema, and privacy page + CSP baseline all on `main` (2026-07-06). Only **WT-2 (auth pages: signup/login/forgot/reset/account)** remains in Phase 1. `privacy.html` is fully populated (business entity/address + contact email supplied by owner 2026-07-06).
+> **Last session ended** at: **🎉 PHASE 1 COMPLETE** — all four worktrees (WT-1 auth foundation, WT-3 measurements schema, WT-4 privacy + CSP, WT-2 auth pages) merged to `main` (2026-07-07). Customers can now sign up, sign in, reset passwords, edit their profile, and delete their account. **Next: Phase 2 (Commerce — cart dual-mode + Stripe checkout + measurements-capture UX).** ⚠️ Pre-launch reminder: re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + custom SMTP.
 >
 > **Phase 1 design + plans landed on `main`:**
 > - Spec: [docs/superpowers/specs/2026-06-16-phase-1-design.md](docs/superpowers/specs/2026-06-16-phase-1-design.md) (commit `30bebcf`)
@@ -15,9 +15,9 @@ Single source of truth for a new chat session to pick up where the previous one 
 >
 > **✅ Image-transformation 403 — RESOLVED 2026-07-06.** Earlier the Supabase `render/image` endpoint returned `403 FeatureNotEnabled`, breaking all product images site-wide (`js/data-loader.js` builds render-endpoint URLs). Owner upgraded to **Supabase Pro + enabled Image Transformation** (Storage → Settings). Verified: render endpoint `200 image/jpeg` (widths 140/200/1400), shop + PDP images render, `scripts/test-swatch-prefers-hero.mjs` green. Full Phase 0 image gate restored.
 >
-> **What's next:**
-> 1. **WT-2 (auth pages)** — signup/login/forgot-password/reset-password/account pages wiring `js/auth.js` (WT-1) + `js/profile.js` (measurements from WT-3). Plan: `docs/superpowers/plans/2026-06-17-phase-1-wt-2-auth-pages.md`. Must add the WT-4 `<head>` CSP block to each new page and extend `scripts/test-csp-compliance.mjs`'s `PAGES` list. Completes Phase 1.
-> 2. Pre-launch (Phase 2): re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + configure custom SMTP; move `frame-ancestors`/clickjacking protection into an HTTP header (Phase 3 CSP hardening).
+> **What's next — Phase 2 (Commerce):**
+> 1. Cart dual-mode upgrade (localStorage → server-side for signed-in users), Stripe full checkout (orders + payments tables + webhook), and the measurements-capture UX (forms wiring `js/profile.js`'s `getLatestMeasurements`/`saveMeasurements`, already exported in WT-2). Plan/spec TBD — start with `superpowers:brainstorming`.
+> 2. Pre-launch chores: re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + configure custom SMTP (signup.html already branches on whether a session comes back, so it will show the check-your-email flow automatically once confirmation is on); move `frame-ancestors`/clickjacking protection into an HTTP header (Phase 3 CSP hardening).
 >
 > **Phase 1 agentic cycle reference:** `superpowers:brainstorming` → `superpowers:writing-plans` → `superpowers:using-git-worktrees` → `superpowers:subagent-driven-development` → `superpowers:verification-before-completion` → `superpowers:requesting-code-review` → `superpowers:finishing-a-development-branch`. Full methodology: `~/.claude/plans/just-to-revamp-the-agile-sundae.md`. Phase 0 retrospective notes live at the end of [§7](#7-open--next-steps) under "Phase 0 — shipped".
 
@@ -444,7 +444,37 @@ Shared spine landed. Every existing page now mounts `components/header.html` + `
   hero-rail, swatch) + token-discipline all green with CSP active.
 - **WT-2 hook:** when WT-2 ships signup/login/forgot/reset/account, add the same
   `<head>` CSP block to each and extend the `PAGES` array in
-  `scripts/test-csp-compliance.mjs`.
+  `scripts/test-csp-compliance.mjs`. *(Done in WT-2 — see below.)*
+
+### Phase 1 WT-2 — auth pages (SHIPPED 2026-07-07) — Phase 1 close
+
+- **5 new pages:** `signup.html`, `login.html`, `forgot-password.html`,
+  `reset-password.html`, `account.html`. All carry the per-page `<head>` CSP
+  block; all use the shared `.auth-card` treatment (440px centered card) except
+  `account.html` (two-column: sticky section nav + content, collapses <900px).
+- **`js/profile.js`** — `getMyProfile`, `updateMyProfile`, plus
+  `getLatestMeasurements`/`saveMeasurements` (exported; **no Phase 1 UI calls the
+  last two — Phase 2 wires the measurement forms**). `client()` lazily
+  dynamic-imports `js/auth.js` so the module is Node-testable (a top-level import
+  would trip auth.js's browser-only esm.sh import).
+- **account.html:** profile edit (name/phone/newsletter, email read-only),
+  Measurements section (disabled "Available soon" stubs + a Book-consultation
+  link), and a Danger zone with a DELETE-typed + password-re-verified modal that
+  calls `deleteAccount()` → `delete_my_account` RPC → `/?account_deleted=1`.
+- **⚙️ Signup behavior note:** with email confirmation OFF (current config),
+  `signUp()` returns a live session, so `signup.html` signs the user in and lands
+  them on `/account.html`. It **branches on `data.session`** — when confirmation
+  is re-enabled before launch, no session comes back and it routes to
+  `/login.html?check_email=1` (the check-your-email flow) automatically. The
+  login page already has check_email / confirmed / reset status banners.
+- **Deviations from the WT-2 plan (all justified):** test scripts read
+  `.env.local` manually (project convention; `dotenv` isn't a dependency);
+  CSP blocks omit `frame-ancestors` (per WT-4); each auth page adds a page-local
+  `input[type="password"].input` rule (base.css `.input` doesn't cover password).
+- **Tests (6, all green):** `test-profile-module`, `test-signup-flow`,
+  `test-forgot-reset`, `test-account-profile-crud`, `test-account-delete`,
+  `test-route-guards`. Full Phase 0 + WT-1 + WT-3 + WT-2 suite (18 tests) +
+  token-discipline + 12-page CSP sweep all green.
 
 **Architectural notes for later phases:**
 - The CSP meta tag was NOT added in Phase 0 (deferred to Phase 3 hardening per spec). Phase 3 should add it to `components/header.html` since `<meta http-equiv="Content-Security-Policy">` in a fetched HTML fragment IS honored by browsers if it appears before any external resource loads, but it's safer to add it directly to each page's `<head>` until Phase 3.
