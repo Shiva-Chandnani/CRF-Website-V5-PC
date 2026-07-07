@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' https://esm.sh https://assets.calendly.com;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://assets.calendly.com;
+  font-src 'self' https://fonts.gstatic.com;
+  img-src 'self' data: https://*.supabase.co https://placehold.co;
+  media-src 'self';
+  connect-src 'self' https://*.supabase.co wss://*.supabase.co;
+  frame-src https://calendly.com;
+  form-action 'self';
+  base-uri 'self';
+  object-src 'none';
+">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Create account — Country Road Fashions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Raleway:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="preload" as="fetch" href="/components/header.html" crossorigin>
+<link rel="preload" as="fetch" href="/components/footer.html" crossorigin>
+<link rel="stylesheet" href="/css/base.css">
+<style>
+  /* FOUC token reservation for the mounted layout slots */
+  :root { --color-jet:#0E0F11; --color-charcoal:#1A1B1F; }
+</style>
+<script type="module" src="/js/layout.js"></script>
+<script type="module" src="/js/auth.js"></script>
+<style>
+  /* === Shared .auth-card pattern (identical across signup/login/forgot/reset) === */
+  .auth-shell {
+    min-height: calc(100vh - var(--header-h));
+    display: grid;
+    place-items: center;
+    padding: var(--space-8) var(--space-4);
+    background: var(--color-off-white);
+  }
+  .auth-card {
+    width: 100%;
+    max-width: 440px;
+    background: var(--color-white);
+    border: 1px solid var(--color-rule);
+    box-shadow: var(--shadow-2);
+    padding: var(--space-7) var(--space-6);
+  }
+  .auth-card__title {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 32px;
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-jet);
+    margin: 0 0 var(--space-2);
+  }
+  .auth-card__sub {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-muted);
+    margin: 0 0 var(--space-6);
+  }
+  .auth-card__form { display: flex; flex-direction: column; gap: var(--space-4); }
+  .auth-card__row  { display: flex; align-items: flex-start; gap: var(--space-3); font-size: 13px; line-height: 1.5; color: var(--color-ink); cursor: pointer; }
+  .auth-card__row input[type="checkbox"] { margin-top: 2px; accent-color: var(--color-jet); flex: none; }
+  .auth-card__cta  { width: 100%; margin-top: var(--space-2); }
+  .auth-card__foot {
+    margin-top: var(--space-5);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-rule);
+    font-size: 13px;
+    color: var(--color-muted);
+    text-align: center;
+  }
+  .auth-card__foot a { color: var(--color-jet); border-bottom: 1px solid var(--color-rule); transition: border-color var(--t-fast) var(--ease-out); }
+  .auth-card__foot a:hover,
+  .auth-card__foot a:focus-visible { color: var(--color-charcoal); border-color: var(--color-jet); }
+  /* base.css .input covers text/email/tel/search/textarea/select but not password */
+  input[type="password"].input {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    padding: 12px 14px;
+    background: var(--color-white);
+    color: var(--color-ink);
+    border: 1px solid var(--color-rule);
+    border-radius: 0;
+    transition: border-color var(--t-med) var(--ease-out);
+  }
+  input[type="password"].input:hover { border-color: var(--color-stone); }
+  input[type="password"].input:focus-visible { border-color: var(--color-jet); outline-offset: 0; }
+  input[type="password"].input::placeholder { color: var(--color-muted); }
+  .auth-error {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #8a1c1c;
+    background: rgba(138,28,28,0.06);
+    border: 1px solid rgba(138,28,28,0.18);
+    padding: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+  .auth-error[hidden] { display: none; }
+</style>
+</head>
+<body>
+  <div data-layout="header" style="min-height:72px;background:var(--color-jet);"></div>
+  <main class="auth-shell">
+    <section class="auth-card" aria-labelledby="signup-title">
+      <h1 id="signup-title" class="auth-card__title">Create your account</h1>
+      <p class="auth-card__sub">Save your fit, track orders, and book consultations.</p>
+      <div class="auth-error" id="auth-error" hidden role="alert"></div>
+      <form class="auth-card__form" id="signup-form" novalidate>
+        <div class="field">
+          <label for="full_name">Full name</label>
+          <input class="input" type="text" id="full_name" name="full_name" autocomplete="name" required />
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input class="input" type="email" id="email" name="email" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input class="input" type="password" id="password" name="password" autocomplete="new-password" minlength="8" required />
+        </div>
+        <label class="auth-card__row">
+          <input type="checkbox" id="opted_in_newsletter" name="opted_in_newsletter" />
+          Send me occasional updates on new fabrics and trunk shows.
+        </label>
+        <button type="submit" class="btn btn--primary auth-card__cta">Create account</button>
+      </form>
+      <p class="auth-card__foot">
+        Already have an account? <a href="/login.html">Sign in</a>
+      </p>
+    </section>
+  </main>
+  <div data-layout="footer"></div>
+
+  <script type="module">
+    import { signUp, requireGuest } from '/js/auth.js';
+
+    requireGuest();   // signed-in users get redirected to /account.html
+
+    const form = document.getElementById('signup-form');
+    const errBox = document.getElementById('auth-error');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errBox.hidden = true;
+      const fd = new FormData(form);
+      const payload = {
+        full_name:           (fd.get('full_name') || '').toString().trim(),
+        email:               (fd.get('email')     || '').toString().trim(),
+        password:            (fd.get('password')  || '').toString(),
+        opted_in_newsletter: fd.get('opted_in_newsletter') === 'on',
+      };
+      const btn = form.querySelector('button[type="submit"]');
+      btn.setAttribute('aria-busy', 'true');
+      btn.disabled = true;
+      const { data, error } = await signUp(payload);
+      btn.removeAttribute('aria-busy');
+      btn.disabled = false;
+      if (error) {
+        errBox.textContent = error.message || 'Something went wrong. Please try again.';
+        errBox.hidden = false;
+        return;
+      }
+      // If email confirmation is disabled (current project config), signUp returns
+      // a live session and the user is already signed in → go straight to account.
+      // When confirmation is re-enabled before launch, no session comes back yet →
+      // send them to sign in with the "check your email" prompt.
+      if (data?.session) {
+        window.location.assign('/account.html');
+      } else {
+        window.location.assign('/login.html?check_email=1');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' https://esm.sh https://assets.calendly.com;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://assets.calendly.com;
+  font-src 'self' https://fonts.gstatic.com;
+  img-src 'self' data: https://*.supabase.co https://placehold.co;
+  media-src 'self';
+  connect-src 'self' https://*.supabase.co wss://*.supabase.co;
+  frame-src https://calendly.com;
+  form-action 'self';
+  base-uri 'self';
+  object-src 'none';
+">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sign in — Country Road Fashions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Raleway:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="preload" as="fetch" href="/components/header.html" crossorigin>
+<link rel="preload" as="fetch" href="/components/footer.html" crossorigin>
+<link rel="stylesheet" href="/css/base.css">
+<style>
+  :root { --color-jet:#0E0F11; --color-charcoal:#1A1B1F; }
+</style>
+<script type="module" src="/js/layout.js"></script>
+<script type="module" src="/js/auth.js"></script>
+<style>
+  .auth-shell {
+    min-height: calc(100vh - var(--header-h));
+    display: grid;
+    place-items: center;
+    padding: var(--space-8) var(--space-4);
+    background: var(--color-off-white);
+  }
+  .auth-card {
+    width: 100%; max-width: 440px;
+    background: var(--color-white);
+    border: 1px solid var(--color-rule);
+    box-shadow: var(--shadow-2);
+    padding: var(--space-7) var(--space-6);
+  }
+  .auth-card__title {
+    font-family: var(--font-serif); font-weight: 500;
+    font-size: 32px; line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight); color: var(--color-jet);
+    margin: 0 0 var(--space-2);
+  }
+  .auth-card__sub { font-size: 14px; color: var(--color-muted); margin: 0 0 var(--space-6); }
+  .auth-card__form { display: flex; flex-direction: column; gap: var(--space-4); }
+  .auth-card__cta { width: 100%; margin-top: var(--space-2); }
+  .auth-card__foot {
+    margin-top: var(--space-5); padding-top: var(--space-5);
+    border-top: 1px solid var(--color-rule);
+    font-size: 13px; color: var(--color-muted); text-align: center;
+  }
+  .auth-card__foot a { color: var(--color-jet); border-bottom: 1px solid var(--color-rule); transition: border-color var(--t-fast) var(--ease-out); }
+  .auth-card__foot a:hover,
+  .auth-card__foot a:focus-visible { color: var(--color-charcoal); border-color: var(--color-jet); }
+  .auth-card__forgot { display: block; text-align: right; font-size: 12px; color: var(--color-muted); border-bottom: 1px solid transparent; width: fit-content; margin-left: auto; transition: color var(--t-fast) var(--ease-out); }
+  .auth-card__forgot:hover,
+  .auth-card__forgot:focus-visible { color: var(--color-jet); border-bottom-color: var(--color-stone); }
+  input[type="password"].input {
+    font-family: var(--font-sans); font-size: 14px; padding: 12px 14px;
+    background: var(--color-white); color: var(--color-ink);
+    border: 1px solid var(--color-rule); border-radius: 0;
+    transition: border-color var(--t-med) var(--ease-out);
+  }
+  input[type="password"].input:hover { border-color: var(--color-stone); }
+  input[type="password"].input:focus-visible { border-color: var(--color-jet); outline-offset: 0; }
+  .auth-status {
+    font-family: var(--font-sans); font-size: 13px; line-height: 1.5;
+    background: var(--color-cream);
+    border: 1px solid var(--color-rule);
+    color: var(--color-ink);
+    padding: var(--space-3) var(--space-4);
+    margin: 0 0 var(--space-5);
+  }
+  .auth-status[hidden] { display: none; }
+  .auth-error {
+    font-size: 13px; line-height: 1.5; color: #8a1c1c;
+    background: rgba(138,28,28,0.06);
+    border: 1px solid rgba(138,28,28,0.18);
+    padding: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+  .auth-error[hidden] { display: none; }
+</style>
+</head>
+<body>
+  <div data-layout="header" style="min-height:72px;background:var(--color-jet);"></div>
+  <main class="auth-shell">
+    <section class="auth-card" aria-labelledby="login-title">
+      <h1 id="login-title" class="auth-card__title">Sign in</h1>
+      <p class="auth-card__sub">Welcome back.</p>
+
+      <div class="auth-status" id="status-check_email" data-status="check_email" hidden>
+        Almost there — check your email for a confirmation link.
+      </div>
+      <div class="auth-status" id="status-confirmed" data-status="confirmed" hidden>
+        Email confirmed. Sign in below.
+      </div>
+      <div class="auth-status" id="status-reset" data-status="reset" hidden>
+        Your password was updated. Sign in with the new one.
+      </div>
+
+      <div class="auth-error" id="auth-error" hidden role="alert"></div>
+      <form class="auth-card__form" id="login-form" novalidate>
+        <div class="field">
+          <label for="email">Email</label>
+          <input class="input" type="email" id="email" name="email" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input class="input" type="password" id="password" name="password" autocomplete="current-password" required />
+        </div>
+        <a class="auth-card__forgot" href="/forgot-password.html">Forgot password?</a>
+        <button type="submit" class="btn btn--primary auth-card__cta">Sign in</button>
+      </form>
+      <p class="auth-card__foot">
+        New to Country Road Fashions? <a href="/signup.html">Create an account</a>
+      </p>
+    </section>
+  </main>
+  <div data-layout="footer"></div>
+
+  <script type="module">
+    import { signInWithPassword, requireGuest } from '/js/auth.js';
+
+    requireGuest();   // already signed-in → /account.html (honors ?next= if present)
+
+    const qs = new URLSearchParams(location.search);
+    if (qs.get('check_email')) document.getElementById('status-check_email').hidden = false;
+    if (qs.get('confirmed'))   document.getElementById('status-confirmed').hidden   = false;
+    if (qs.get('reset'))       document.getElementById('status-reset').hidden       = false;
+
+    const form   = document.getElementById('login-form');
+    const errBox = document.getElementById('auth-error');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errBox.hidden = true;
+      const fd = new FormData(form);
+      const payload = {
+        email:    (fd.get('email')    || '').toString().trim(),
+        password: (fd.get('password') || '').toString(),
+      };
+      const btn = form.querySelector('button[type="submit"]');
+      btn.setAttribute('aria-busy', 'true');
+      btn.disabled = true;
+      const { data, error } = await signInWithPassword(payload);
+      btn.removeAttribute('aria-busy');
+      btn.disabled = false;
+      if (error) {
+        errBox.textContent = error.message || 'Sign-in failed.';
+        errBox.hidden = false;
+        return;
+      }
+      const next = qs.get('next');
+      window.location.assign(next || '/account.html');
+    });
+  </script>
+</body>
+</html>
