@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' https://esm.sh https://assets.calendly.com;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://assets.calendly.com;
+  font-src 'self' https://fonts.gstatic.com;
+  img-src 'self' data: https://*.supabase.co https://placehold.co;
+  media-src 'self';
+  connect-src 'self' https://*.supabase.co wss://*.supabase.co;
+  frame-src https://calendly.com;
+  form-action 'self';
+  base-uri 'self';
+  object-src 'none';
+">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My account — Country Road Fashions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Raleway:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="preload" as="fetch" href="/components/header.html" crossorigin>
+<link rel="preload" as="fetch" href="/components/footer.html" crossorigin>
+<link rel="stylesheet" href="/css/base.css">
+<style>
+  :root { --color-jet:#0E0F11; --color-charcoal:#1A1B1F; }
+</style>
+<script type="module" src="/js/layout.js"></script>
+<script type="module" src="/js/auth.js"></script>
+<style>
+  .account-shell { max-width: var(--container-max); margin: 0 auto; padding: var(--space-8) var(--space-6); background: var(--color-off-white); }
+  .account-shell h1 {
+    font-family: var(--font-serif); font-weight: 500;
+    font-size: clamp(36px, 5vw, 56px);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-jet);
+    margin: 0 0 var(--space-6);
+  }
+  .account-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: var(--space-7);
+    align-items: start;
+  }
+  .account-nav {
+    position: sticky; top: calc(var(--header-h) + var(--space-5));
+    display: flex; flex-direction: column; gap: var(--space-2);
+    border-left: 1px solid var(--color-rule);
+    padding-left: var(--space-4);
+  }
+  .account-nav a {
+    font-size: 13px; letter-spacing: 0.04em;
+    color: var(--color-muted);
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid transparent;
+    width: fit-content;
+    transition: color var(--t-fast) var(--ease-out);
+  }
+  .account-nav a:hover, .account-nav a:focus-visible, .account-nav a[aria-current="true"] { color: var(--color-jet); }
+  .account-section {
+    background: var(--color-white);
+    border: 1px solid var(--color-rule);
+    padding: var(--space-6);
+    margin-bottom: var(--space-6);
+  }
+  .account-section h2 {
+    font-family: var(--font-serif); font-weight: 500;
+    font-size: 24px; color: var(--color-jet);
+    margin: 0 0 var(--space-4);
+  }
+  .account-section .field { margin-bottom: var(--space-4); }
+  .account-section .field--readonly input { background: var(--color-cream); color: var(--color-muted); }
+  input[type="password"].input {
+    font-family: var(--font-sans); font-size: 14px; padding: 12px 14px;
+    background: var(--color-white); color: var(--color-ink);
+    border: 1px solid var(--color-rule); border-radius: 0;
+    transition: border-color var(--t-med) var(--ease-out);
+  }
+  input[type="password"].input:hover { border-color: var(--color-stone); }
+  input[type="password"].input:focus-visible { border-color: var(--color-jet); outline-offset: 0; }
+  .profile-row { display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-4); }
+  .profile-row input[type="checkbox"] { accent-color: var(--color-jet); }
+  #profile-saved {
+    font-size: 13px; color: var(--color-jet);
+    background: var(--color-cream);
+    border: 1px solid var(--color-rule);
+    padding: var(--space-2) var(--space-3);
+  }
+  #profile-saved[hidden] { display: none; }
+  .measurements-grid { display: grid; gap: var(--space-3); }
+  .measurement-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--space-4); padding: var(--space-4);
+    border: 1px solid var(--color-rule);
+  }
+  .measurement-row__label { font-size: 14px; color: var(--color-ink); }
+  .measurement-row__hint  { font-size: 12px; color: var(--color-muted); display: block; margin-top: 2px; }
+  .measurement-row .btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+  .danger-zone {
+    border: 1px solid rgba(138,28,28,0.25);
+    background: rgba(138,28,28,0.03);
+  }
+  .danger-zone h2 { color: #8a1c1c; }
+  .danger-zone p  { font-size: 14px; line-height: 1.6; color: var(--color-ink); margin: 0 0 var(--space-4); }
+  .danger-zone .btn--danger {
+    background: #8a1c1c; color: var(--color-white); border-color: #8a1c1c;
+  }
+  .danger-zone .btn--danger:hover { background: #6f1414; border-color: #6f1414; transform: translateY(-1px); }
+
+  /* Delete-account modal */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(14,15,17,0.55);
+    display: grid; place-items: center;
+    padding: var(--space-4);
+    z-index: 100;
+  }
+  .modal-backdrop[hidden] { display: none; }
+  .modal-card {
+    width: 100%; max-width: 460px;
+    background: var(--color-white);
+    border: 1px solid var(--color-rule);
+    box-shadow: var(--shadow-3);
+    padding: var(--space-6);
+  }
+  .modal-card h3 {
+    font-family: var(--font-serif); font-weight: 500;
+    font-size: 24px; color: var(--color-jet); margin: 0 0 var(--space-3);
+  }
+  .modal-card p { font-size: 14px; line-height: 1.6; color: var(--color-ink); margin: 0 0 var(--space-4); }
+  .modal-card .field { margin-bottom: var(--space-3); }
+  .modal-actions { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-4); }
+  .modal-error {
+    font-size: 13px; color: #8a1c1c;
+    background: rgba(138,28,28,0.06);
+    border: 1px solid rgba(138,28,28,0.18);
+    padding: var(--space-3); margin-bottom: var(--space-3);
+  }
+  .modal-error[hidden] { display: none; }
+
+  @media (max-width: 900px) {
+    .account-layout { grid-template-columns: 1fr; }
+    .account-nav { position: static; flex-direction: row; flex-wrap: wrap; gap: var(--space-4); border-left: 0; padding-left: 0; }
+  }
+</style>
+</head>
+<body>
+  <div data-layout="header" style="min-height:72px;background:var(--color-jet);"></div>
+  <main class="account-shell">
+    <h1>My account</h1>
+    <div class="account-layout">
+      <nav class="account-nav" aria-label="Account sections">
+        <a href="#profile" aria-current="true">Profile</a>
+        <a href="#measurements">Measurements</a>
+        <a href="#danger">Danger zone</a>
+        <a href="#" id="signout-link">Sign out</a>
+      </nav>
+      <div>
+        <!-- Profile -->
+        <section class="account-section" id="profile" aria-labelledby="profile-title">
+          <h2 id="profile-title">Profile</h2>
+          <form id="profile-form" novalidate>
+            <div class="field field--readonly">
+              <label for="email">Email</label>
+              <input class="input" type="email" id="email" name="email" disabled />
+            </div>
+            <div class="field">
+              <label for="full_name">Full name</label>
+              <input class="input" type="text" id="full_name" name="full_name" autocomplete="name" />
+            </div>
+            <div class="field">
+              <label for="phone">Phone</label>
+              <input class="input" type="tel" id="phone" name="phone" autocomplete="tel" />
+            </div>
+            <label class="profile-row">
+              <input type="checkbox" id="opted_in_newsletter" name="opted_in_newsletter" />
+              Subscribe to our newsletter
+            </label>
+            <div class="profile-row">
+              <button type="submit" class="btn btn--primary" id="save-profile">Save changes</button>
+              <span id="profile-saved" hidden>Saved.</span>
+            </div>
+          </form>
+        </section>
+
+        <!-- Measurements (stub buttons; Phase 2 wires forms) -->
+        <section class="account-section" id="measurements" aria-labelledby="measurements-title">
+          <h2 id="measurements-title">Measurements</h2>
+          <div class="measurements-grid">
+            <div class="measurement-row">
+              <div>
+                <span class="measurement-row__label">Body measurements</span>
+                <span class="measurement-row__hint">Available soon — coming in our next release.</span>
+              </div>
+              <button class="btn btn--ghost" type="button" disabled aria-disabled="true">Add</button>
+            </div>
+            <div class="measurement-row">
+              <div>
+                <span class="measurement-row__label">Reference garment</span>
+                <span class="measurement-row__hint">Available soon — coming in our next release.</span>
+              </div>
+              <button class="btn btn--ghost" type="button" disabled aria-disabled="true">Add</button>
+            </div>
+            <div class="measurement-row">
+              <div>
+                <span class="measurement-row__label">In-person consultation</span>
+                <span class="measurement-row__hint">Book a visit to our atelier.</span>
+              </div>
+              <a class="btn btn--primary" href="/book-appointment.html">Book</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- Danger zone -->
+        <section class="account-section danger-zone" id="danger" aria-labelledby="danger-title">
+          <h2 id="danger-title">Delete my account</h2>
+          <p>
+            This permanently removes your profile, measurements, and sign-in. Tax-mandated
+            invoice records may be retained per Thai law. This cannot be undone.
+          </p>
+          <button class="btn btn--danger" type="button" id="open-delete-modal">Delete my account</button>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Delete confirmation modal -->
+  <div class="modal-backdrop" id="delete-modal" hidden role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+    <div class="modal-card">
+      <h3 id="delete-modal-title">Are you sure?</h3>
+      <p>Type <strong>DELETE</strong> and re-enter your password to confirm.</p>
+      <div class="modal-error" id="delete-modal-error" hidden role="alert"></div>
+      <form id="delete-form" novalidate>
+        <div class="field">
+          <label for="confirm-text">Type DELETE</label>
+          <input class="input" type="text" id="confirm-text" name="confirm-text" autocomplete="off" required />
+        </div>
+        <div class="field">
+          <label for="confirm-password">Password</label>
+          <input class="input" type="password" id="confirm-password" name="confirm-password" autocomplete="current-password" required />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn--ghost" id="cancel-delete">Cancel</button>
+          <button type="submit" class="btn btn--danger">Delete forever</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div data-layout="footer"></div>
+
+  <script type="module">
+    import {
+      requireAuth, signInWithPassword, signOut, deleteAccount, getUser,
+    } from '/js/auth.js';
+    import { getMyProfile, updateMyProfile } from '/js/profile.js';
+
+    await requireAuth({ redirectTo: '/login.html' });
+
+    // Load profile into the form
+    const profile = await getMyProfile();
+    if (profile) {
+      document.getElementById('email').value               = profile.email || '';
+      document.getElementById('full_name').value           = profile.full_name || '';
+      document.getElementById('phone').value               = profile.phone || '';
+      document.getElementById('opted_in_newsletter').checked = !!profile.opted_in_newsletter;
+    }
+
+    // Save profile
+    const form   = document.getElementById('profile-form');
+    const saved  = document.getElementById('profile-saved');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      saved.hidden = true;
+      const fd = new FormData(form);
+      const payload = {
+        full_name:           (fd.get('full_name') || '').toString().trim(),
+        phone:               (fd.get('phone')     || '').toString().trim(),
+        opted_in_newsletter: fd.get('opted_in_newsletter') === 'on',
+      };
+      const { error } = await updateMyProfile(payload);
+      if (error) {
+        alert('Could not save: ' + (error.message || 'unknown error'));
+        return;
+      }
+      saved.hidden = false;
+      setTimeout(() => { saved.hidden = true; }, 2500);
+    });
+
+    // Sign out
+    document.getElementById('signout-link').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await signOut();
+      window.location.assign('/');
+    });
+
+    // Delete-account modal wiring
+    const modal       = document.getElementById('delete-modal');
+    const openBtn     = document.getElementById('open-delete-modal');
+    const cancelBtn   = document.getElementById('cancel-delete');
+    const deleteForm  = document.getElementById('delete-form');
+    const deleteError = document.getElementById('delete-modal-error');
+
+    openBtn.addEventListener('click', () => {
+      deleteError.hidden = true;
+      modal.hidden = false;
+      document.getElementById('confirm-text').focus();
+    });
+    cancelBtn.addEventListener('click', () => {
+      modal.hidden = true;
+      deleteForm.reset();
+    });
+
+    deleteForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      deleteError.hidden = true;
+      const fd = new FormData(deleteForm);
+      const confirmText = (fd.get('confirm-text') || '').toString();
+      const password    = (fd.get('confirm-password') || '').toString();
+      if (confirmText !== 'DELETE') {
+        deleteError.textContent = 'Please type DELETE in all caps to confirm.';
+        deleteError.hidden = false;
+        return;
+      }
+      // Re-verify password: sign in again to confirm identity before destructive call.
+      const user = await getUser();
+      if (!user?.email) {
+        deleteError.textContent = 'Session lost. Please sign in again.';
+        deleteError.hidden = false;
+        return;
+      }
+      const { error: reErr } = await signInWithPassword({ email: user.email, password });
+      if (reErr) {
+        deleteError.textContent = 'Password incorrect.';
+        deleteError.hidden = false;
+        return;
+      }
+      const { error: dErr } = await deleteAccount();
+      if (dErr) {
+        deleteError.textContent = dErr.message || 'Could not delete account.';
+        deleteError.hidden = false;
+        return;
+      }
+      await signOut();
+      window.location.assign('/?account_deleted=1');
+    });
+  </script>
+</body>
+</html>
