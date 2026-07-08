@@ -88,6 +88,16 @@ export function clearCart() {
   writeCart(emptyCart());
 }
 
+// Atomically replace the whole cart. Unlike the mutation helpers, this
+// PRESERVES the provided updated_at (the sync layer relies on it for
+// cross-device last-write-wins). Falls back to now() when absent.
+export function replaceCart(cart) {
+  const items = (cart && Array.isArray(cart.items)) ? cart.items : [];
+  const updated_at = (cart && cart.updated_at) ? cart.updated_at : new Date().toISOString();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ items, updated_at }));
+  window.dispatchEvent(new CustomEvent('crf:cart-changed'));
+}
+
 export function lineCount() {
   return readCart().items.reduce((sum, x) => sum + (x.qty || 1), 0);
 }
