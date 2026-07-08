@@ -147,3 +147,12 @@ if (!tryMount()) {
     document.addEventListener('DOMContentLoaded', tryMount, { once: true });
   }
 }
+
+// -----------------------------------------------------------------------------
+// Server-sync bootstrap (Phase 2). Browser-only + fire-and-forget: pulls in the
+// offline-first mirror so every page importing cart.js gets cross-device sync
+// with no extra <script> tags. Guarded so cart.js stays import-safe elsewhere.
+// -----------------------------------------------------------------------------
+if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+  import('./cart-sync.js').catch((e) => console.warn('[cart] sync unavailable', e?.message || e));
+}
