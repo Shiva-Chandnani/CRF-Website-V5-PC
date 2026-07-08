@@ -17,9 +17,10 @@ Single source of truth for a new chat session to pick up where the previous one 
 >
 > **✅ Image-transformation 403 — RESOLVED 2026-07-06.** Earlier the Supabase `render/image` endpoint returned `403 FeatureNotEnabled`, breaking all product images site-wide (`js/data-loader.js` builds render-endpoint URLs). Owner upgraded to **Supabase Pro + enabled Image Transformation** (Storage → Settings). Verified: render endpoint `200 image/jpeg` (widths 140/200/1400), shop + PDP images render, `scripts/test-swatch-prefers-hero.mjs` green. Full Phase 0 image gate restored.
 >
-> **What's next — Phase 2 (Commerce):**
-> 1. Cart dual-mode upgrade (localStorage → server-side for signed-in users), Stripe full checkout (orders + payments tables + webhook), and the measurements-capture UX (forms wiring `js/profile.js`'s `getLatestMeasurements`/`saveMeasurements`, already exported in WT-2). Plan/spec TBD — start with `superpowers:brainstorming`.
-> 2. Pre-launch chores: re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + configure custom SMTP (signup.html already branches on whether a session comes back, so it will show the check-your-email flow automatically once confirmation is on); move `frame-ancestors`/clickjacking protection into an HTTP header (Phase 3 CSP hardening).
+> **What's next — Phase 2 (Commerce):** cart dual-mode is the 1st of 3 sub-projects and is now **✅ shipped/merged** (see §7 "Phase 2 — cart dual-mode"). Remaining:
+> 1. **Stripe full checkout** (orders + payments tables + webhook) — **START HERE, begin with `superpowers:brainstorming`**. Design phase needs NOTHING from Stripe. Building/testing needs only a free **test-mode** account (test keys → `.env.local`, test cards, `stripe listen` for webhooks) — no business/bank verification. Full account **activation** (Thai bank + identity → live keys) is a **pre-launch** step. Stripe supports Thailand + THB. ⚠️ At the cart→order snapshot, **re-resolve prices server-side + validate `items[]` shape — never trust the client-written `carts.items` blob** (owner-only RLS governs who writes, not what shape).
+> 2. **Measurements-capture UX** — wire the `account.html` measurement stubs (and any checkout step) to `js/profile.js`'s already-exported `getLatestMeasurements`/`saveMeasurements`. Schema shipped in Phase 1 WT-3. Largely independent of cart/Stripe.
+> 3. Pre-launch chores: re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + configure custom SMTP (signup.html already branches on whether a session comes back, so it will show the check-your-email flow automatically once confirmation is on); move `frame-ancestors`/clickjacking protection into an HTTP header (Phase 3 CSP hardening).
 >
 > **Phase 1 agentic cycle reference:** `superpowers:brainstorming` → `superpowers:writing-plans` → `superpowers:using-git-worktrees` → `superpowers:subagent-driven-development` → `superpowers:verification-before-completion` → `superpowers:requesting-code-review` → `superpowers:finishing-a-development-branch`. Full methodology: `~/.claude/plans/just-to-revamp-the-agile-sundae.md`. Phase 0 retrospective notes live at the end of [§7](#7-open--next-steps) under "Phase 0 — shipped".
 
@@ -295,12 +296,12 @@ A **phase** is a sequence of these units. Phase ends when all its features are m
 | # | Feature | Phase | Status |
 |---|---|---|---|
 | 1 | Customization for Suit | 4 (extend to Jacket/Trouser) | ✅ V1 done |
-| 2 | Add items to cart | 2 (server-side cart dual-mode) | ✅ V1 localStorage done |
+| 2 | Add items to cart | 2 (server-side cart dual-mode) | ✅ done — V1 localStorage + Phase 2 offline-first server mirror (merged 2026-07-08) |
 | 3 | Site-wide search (header) | 3 | ⬜ |
 | 4 | Shop page filters + search | 3 | ⬜ (basic input exists in shop.html) |
 | 5 | Customer login + profile (email/password + Google) | 1 | ⬜ |
 | 6 | Measurements capture | 1 (schema) + 2 (UX) | ⬜ |
-| 7 | Stripe checkout + payment page | 2 | ⬜ **confirmed: full Stripe** |
+| 7 | Stripe checkout + payment page | 2 | ⬜ **NEXT** — full Stripe. Build on test-mode keys (no verification needed); activate account (Thai bank + identity) at launch. Snapshot cart→order must re-resolve prices + validate server-side (see §7 next-steps). |
 | 8 | Admin dashboard (analytics + customers) | 5 | ⬜ |
 | 9 | CRM sync | 5 | ⬜ |
 | 10 | Professional polish | Continuous | ⬜ |
@@ -328,7 +329,7 @@ A **phase** is a sequence of these units. Phase ends when all its features are m
 |---|---|---|---|
 | **0 — Foundation Refactor** | One shared spine for every page | Shared header/footer, `css/base.css`, normalized `.btn` system, meta scaffold, newsletter capture table + footer-form wiring (item 13 capture half) | **✅ shipped 2026-05-31** (commit `623c9c3`). Retrospective notes in the "Phase 0 — shipped" subsection below. |
 | **1 — Identity & Personal Data** | Customers exist; we capture them | 5, 6 (schema), 14 (privacy page draft + CSP baseline) | **EXECUTE NEXT.** Strict prereq for everything personal. Spec carryover below. |
-| 2 — Commerce | Real cart + paid orders | 2 (cart dual-mode upgrade), 6 (UX during checkout), 7 (Stripe) | Depends on Phase 1. |
+| 2 — Commerce | Real cart + paid orders | 2 (cart dual-mode upgrade ✅ merged 2026-07-08), 6 (UX during checkout ⬜), 7 (Stripe ⬜ NEXT) | Depends on Phase 1. Cart dual-mode done; Stripe + measurements UX remain. |
 | 3 — Discovery + SEO + Privacy hardening | Findability + production-ready security | 3, 4, 11, 14 (CSP tighten + RLS audit) | Many parallel streams. |
 | 4 — Customization expansion | Jacket + Trouser drawers | 1 (extend) | Half session. Schema already supports it (see §10). |
 | 5 — Operations | Admin + CRM | 8, 9 | Needs real data flowing. |
