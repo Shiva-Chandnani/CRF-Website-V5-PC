@@ -2,7 +2,7 @@
 
 Single source of truth for a new chat session to pick up where the previous one left off. Pair this with [CLAUDE.md](CLAUDE.md) (frontend rules) for full context.
 
-> **Last session ended** at: **🛒 PHASE 2 — cart dual-mode SHIPPED** on branch `phase-2/cart-dual-mode` (offline-first server cart: `js/cart.js` stays the synchronous localStorage working copy, `js/cart-sync.js` mirrors it to a per-user `carts` row and reconciles on auth events). Full regression + 12-page CSP sweep green. **Next Phase 2 sub-projects: Stripe full checkout (orders + payments + webhook) and the measurements-capture UX** (forms wiring `js/profile.js`'s `getLatestMeasurements`/`saveMeasurements`, already exported in WT-2). ⚠️ Pre-launch reminder: re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + custom SMTP.
+> **Last session ended** at: **🛒 PHASE 2 — cart dual-mode SHIPPED & MERGED to `main`** (commit `5b52b91`, 2026-07-08; offline-first server cart: `js/cart.js` stays the synchronous localStorage working copy, `js/cart-sync.js` mirrors it to a per-user `carts` row and reconciles on auth events). Full regression + 12-page CSP sweep green. **Next Phase 2 sub-projects: Stripe full checkout (orders + payments + webhook) and the measurements-capture UX** (forms wiring `js/profile.js`'s `getLatestMeasurements`/`saveMeasurements`, already exported in WT-2). ⚠️ Pre-launch reminder: re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + custom SMTP.
 >
 > **Phase 1 recap:** all four worktrees (WT-1 auth foundation, WT-3 measurements schema, WT-4 privacy + CSP, WT-2 auth pages) merged to `main` (2026-07-07). Customers can sign up, sign in, reset passwords, edit their profile, and delete their account.
 >
