@@ -2,7 +2,9 @@
 
 Single source of truth for a new chat session to pick up where the previous one left off. Pair this with [CLAUDE.md](CLAUDE.md) (frontend rules) for full context.
 
-> **Last session ended** at: **🎉 PHASE 1 COMPLETE** — all four worktrees (WT-1 auth foundation, WT-3 measurements schema, WT-4 privacy + CSP, WT-2 auth pages) merged to `main` (2026-07-07). Customers can now sign up, sign in, reset passwords, edit their profile, and delete their account. **Next: Phase 2 (Commerce — cart dual-mode + Stripe checkout + measurements-capture UX).** ⚠️ Pre-launch reminder: re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + custom SMTP.
+> **Last session ended** at: **🛒 PHASE 2 — cart dual-mode SHIPPED** on branch `phase-2/cart-dual-mode` (offline-first server cart: `js/cart.js` stays the synchronous localStorage working copy, `js/cart-sync.js` mirrors it to a per-user `carts` row and reconciles on auth events). Full regression + 12-page CSP sweep green. **Next Phase 2 sub-projects: Stripe full checkout (orders + payments + webhook) and the measurements-capture UX** (forms wiring `js/profile.js`'s `getLatestMeasurements`/`saveMeasurements`, already exported in WT-2). ⚠️ Pre-launch reminder: re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + custom SMTP.
+>
+> **Phase 1 recap:** all four worktrees (WT-1 auth foundation, WT-3 measurements schema, WT-4 privacy + CSP, WT-2 auth pages) merged to `main` (2026-07-07). Customers can sign up, sign in, reset passwords, edit their profile, and delete their account.
 >
 > **Phase 1 design + plans landed on `main`:**
 > - Spec: [docs/superpowers/specs/2026-06-16-phase-1-design.md](docs/superpowers/specs/2026-06-16-phase-1-design.md) (commit `30bebcf`)
@@ -82,6 +84,9 @@ MEASUREMENTS (Phase 1 WT-3; owner-only RLS, cascade from profiles):
 customer_body_measurements · customer_jacket_reference · customer_shirt_reference · customer_pants_reference
 v_latest_body_measurements · v_latest_jacket_reference · v_latest_shirt_reference · v_latest_pants_reference
   (DISTINCT ON newest; security_invoker=true so base-table RLS applies)
+
+COMMERCE (Phase 2):
+carts (Phase 2; user_id pk → profiles on delete cascade, items jsonb, updated_at) — owner-only RLS; server mirror of the localStorage cart
 ```
 
 **Auth:** Supabase Auth. Email confirmation currently DISABLED (`mailer_autoconfirm=true`) — re-enable + SMTP before launch. `js/auth.js` (WT-1) is the client wrapper; `js/profile.js` (WT-2) is profile/measurement CRUD.
@@ -110,6 +115,7 @@ v_latest_body_measurements · v_latest_jacket_reference · v_latest_shirt_refere
 | `item_type_customization_categories` | 21 — every category linked to `formal-suit-2-piece`. |
 | `v_customization_catalog` | view: `(item_type, category, option)` resolved + ordered for the drawer. |
 | `newsletter_subscribers` | Phase 0 — `(email pk, profile_id uuid nullable, source, opted_in_at, unsubscribed_at, created_at)`. RLS: anon INSERT only (intentionally no anon UPDATE/SELECT to prevent mass-mutation + email enumeration), authenticated owners SELECT own row. Migration: `db/07_newsletter_subscribers.sql`. |
+| `carts` | Phase 2 — one row per signed-in user (`user_id pk → profiles on delete cascade, items jsonb, updated_at`). Owner-only RLS; server mirror of the localStorage cart, reconciled on auth events. Migration: `db/10_carts.sql`. |
 
 ### Storage
 
@@ -177,7 +183,8 @@ Two public buckets:
 │   ├── test-auth-* / test-profile-rls / test-trigger-newsletter-backfill / test-delete-rpc   # WT-1 auth
 │   ├── test-measurements-{rls,views,cascade}.mjs                         # WT-3 measurements
 │   ├── test-privacy-page.mjs                # WT-4 privacy
-│   └── test-{profile-module,signup-flow,forgot-reset,account-profile-crud,account-delete,route-guards}.mjs  # WT-2 auth pages
+│   ├── test-{profile-module,signup-flow,forgot-reset,account-profile-crud,account-delete,route-guards}.mjs  # WT-2 auth pages
+│   └── test-cart-{merge,rls,dual-mode}.mjs  # Phase 2 cart dual-mode (merge: 13 pure cases; rls: owner isolation + cascade; dual-mode: pptr e2e)
 │      # NOTE: test scripts read .env.local manually (no dotenv). Auth tests use admin createUser (bypasses email blocklist).
 │
 ├── brand_assets/
@@ -499,6 +506,41 @@ Shared spine landed. Every existing page now mounts `components/header.html` + `
   `test-forgot-reset`, `test-account-profile-crud`, `test-account-delete`,
   `test-route-guards`. Full Phase 0 + WT-1 + WT-3 + WT-2 suite (18 tests) +
   token-discipline + 12-page CSP sweep all green.
+
+### Phase 2 — cart dual-mode (SHIPPED 2026-07-08)
+
+- **Offline-first mirror:** `js/cart.js` stays the synchronous localStorage
+  working copy (`crf.cart.v1`) — zero changes to its consumers (customizer,
+  cart.html, header badge). `js/cart-sync.js` mirrors that working copy to a
+  server `carts` row and reconciles it on auth events (login / logout /
+  token-refresh). The site stays fully functional offline / signed-out.
+- **DB** `db/10_carts.sql` — `carts` table (`user_id pk → profiles on delete
+  cascade, items jsonb, updated_at`) + 4 owner-only RLS policies (all
+  `public.`-qualified, `to authenticated`, `auth.uid() = user_id`). Idempotent;
+  applied live via `scripts/run-sql.mjs`.
+- **`js/cart-merge.js`** — pure, Node-testable `lineKey` + `mergeCarts`: union +
+  dedupe by line identity, quantities summed and clamped (≤99), server folded
+  first so server price/added_at win on a collision. No DOM / no network.
+- **`js/cart.js`** — added `replaceCart()` (an `updated_at`-preserving whole-cart
+  swap used by reconcile) + a browser-only dynamic-import bootstrap that lazy-
+  loads `cart-sync.js` (keeps cart.js Node-testable and consumers untouched).
+- **Merge-EXACTLY-ONCE:** guarded by the `crf.cart.owner` localStorage marker +
+  a serialized reconcile — a guest cart is folded into the server cart once per
+  login. Reloads / token-refreshes take an idempotent last-write-wins path
+  (never re-merge), so quantities don't double.
+- **Logout clears LOCAL only** (server row preserved) — shared-computer safe.
+  Background push is self-healing: debounced 800ms, exponential backoff, and
+  retries on `online` / `visibilitychange`.
+- **Tests:** `test-cart-merge` (13 pure cases), `test-cart-rls` (owner-only
+  isolation + cascade on profile delete), `test-cart-dual-mode` (puppeteer e2e:
+  guest→login merge, reload no-dup, logout clears local/keeps server,
+  cross-device pull, identical-line dedupe). Full regression suite (cart-merge,
+  cart-rls, cart-dual-mode, customizer-flow, layout-mount, newsletter-submit,
+  token-discipline) + 12-page CSP sweep all green.
+- **Out of scope / next:** Stripe full checkout (orders / payments / webhook)
+  will snapshot the cart into an `orders` row at purchase; measurements-capture
+  UX (wire `js/profile.js` `getLatestMeasurements`/`saveMeasurements` into the
+  account.html forms).
 
 **Architectural notes for later phases:**
 - The CSP meta tag was NOT added in Phase 0 (deferred to Phase 3 hardening per spec). Phase 3 should add it to `components/header.html` since `<meta http-equiv="Content-Security-Policy">` in a fetched HTML fragment IS honored by browsers if it appears before any external resource loads, but it's safer to add it directly to each page's `<head>` until Phase 3.
