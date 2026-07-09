@@ -22,6 +22,7 @@ const PAGES = [
   '/forgot-password.html',
   '/reset-password.html',
   '/account.html',
+  '/order-confirmation.html',
 ];
 
 function isCspViolation(text) {
