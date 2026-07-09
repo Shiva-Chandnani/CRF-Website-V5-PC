@@ -286,7 +286,14 @@
   .cart-ctas {
     display: flex; gap: 14px;
     align-items: stretch;
+    flex-wrap: wrap;
   }
+  .checkout-error {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #8a1c1c;
+  }
+  .checkout-error:empty { display: none; }
   .cart-disclaimer {
     margin-top: 24px;
     font-family: var(--font-serif);
@@ -340,6 +347,7 @@
 <script type="module">
   import { supabase } from './js/data-loader.js';
   import { readCart, removeLine, setQty, lineCount, subtotal } from './js/cart.js';
+  import './js/checkout.js';
 
   // Pretty THB
   const fmtTHB = (n) => 'THB ' + (Number(n) || 0).toLocaleString('en-US');
@@ -508,9 +516,11 @@
             </div>
           </div>
           <div class="cart-ctas" style="margin-top: 28px;">
+            <button class="btn btn--primary" type="button" data-checkout-button>Proceed to Checkout</button>
+            <a class="btn btn--ghost" id="reserveLink" href="#">Reserve Consultation</a>
             <a class="btn btn--ghost" href="shop.html">Continue Shopping</a>
-            <a class="btn btn--primary" id="reserveLink" href="#">Reserve Consultation</a>
           </div>
+          <p class="checkout-error" data-checkout-error role="alert" aria-live="polite"></p>
         </div>
       </section>
     `;
