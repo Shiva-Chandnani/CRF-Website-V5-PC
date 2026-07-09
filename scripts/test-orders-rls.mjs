@@ -7,15 +7,26 @@ import { createClient } from '@supabase/supabase-js';
 import fs from 'node:fs';
 
 const env = Object.fromEntries(
-  fs.readFileSync('.env.local', 'utf8').split('\n').filter(Boolean)
-    .map(l => l.split('=').map(s => s.trim())).map(([k, ...v]) => [k, v.join('=')]));
-const URL = env.SUPABASE_URL, ANON = env.SUPABASE_ANON_KEY, SVC = env.SUPABASE_SERVICE_ROLE_KEY;
+  fs.readFileSync('.env.local', 'utf8')
+    .split('\n').filter(Boolean)
+    .map(l => l.split('=').map(s => s.trim()))
+    .map(([k, ...v]) => [k, v.join('=')])
+);
+
+const URL  = env.SUPABASE_URL;
+const ANON = env.SUPABASE_ANON_KEY;
+const SVC  = env.SUPABASE_SERVICE_ROLE_KEY;
+
 const admin = createClient(URL, SVC, { auth: { persistSession: false } });
 
 const stamp = `${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
 const password = 'Test-Pass-123!';
+
 let failed = false;
-const step = (n, ok, d = '') => { console.log(`${ok ? '✔' : '✘'} ${n}${d ? '  — ' + d : ''}`); if (!ok) failed = true; };
+function step(name, ok, detail = '') {
+  console.log(`${ok ? '✔' : '✘'} ${name}${detail ? '  — ' + detail : ''}`);
+  if (!ok) failed = true;
+}
 
 let userA, userB, orderId;
 try {
@@ -28,12 +39,20 @@ try {
     items: [{ item_type_id: 'formal-suit-2-piece', fabric_design_id: 'vbc-wool-grey-herringbone', unit_price_thb: 20000, qty: 1, line_total_thb: 20000, customizations: {} }],
   }).select('id').single();
   step('service_role inserts order', !ins.error, ins.error?.message);
+  if (ins.error) throw new Error(`order insert: ${ins.error.message}`);
   orderId = ins.data?.id;
 
   const pay = await admin.from('payments').insert({
     order_id: orderId, stripe_event_id: `evt_test_${stamp}`, amount_thb: 20000, status: 'succeeded',
   });
   step('service_role inserts payment', !pay.error, pay.error?.message);
+
+  // Webhook idempotency guard: a second payment with the SAME stripe_event_id
+  // must be rejected by the UNIQUE constraint.
+  const dupPay = await admin.from('payments').insert({
+    order_id: orderId, stripe_event_id: `evt_test_${stamp}`, amount_thb: 1, status: 'succeeded',
+  });
+  step('duplicate stripe_event_id rejected', !!dupPay.error, dupPay.error ? 'blocked' : 'LEAK');
 
   const anonA = createClient(URL, ANON, { auth: { persistSession: false } });
   const anonB = createClient(URL, ANON, { auth: { persistSession: false } });
