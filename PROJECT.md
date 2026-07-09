@@ -603,6 +603,12 @@ Hosted Stripe Checkout flow — a signed-in customer pays the full garment amoun
   - **Order-confirmation email** — currently there is no transactional email after payment. Needs SMTP (blocked on the same email-confirmation SMTP setup pending from Phase 1).
   - **Embedded Payment Element** — the hosted Checkout cannot load custom fonts (it is a Stripe-branded redirect page). Switching to Stripe's embedded Payment Element would allow full brand control. Deferred post-launch.
   - Measurements-capture UX remains the only open Phase 2 sub-project.
+- **Known V1 gaps (from the final code review — deferred, not blocking; wire in Phase 3 / admin phase):**
+  - **Refunds + `payment_intent.payment_failed` are unhandled.** The webhook only handles `checkout.session.completed`/`expired`. The `orders.status='failed'` and `payments.status='refunded'` enum values have no writer yet. Acceptable for V1 (hosted Checkout keeps the session open on a failed card), but wire `charge.refunded` when refund ops matter.
+  - **Deleted-user order/payment visibility.** `orders.user_id` is `ON DELETE SET NULL` (retains financial records after PDPA deletion), but there is no staff/admin RLS policy, so a deleted user's `orders`/`payments` become unreadable via the API. Revisit when building the admin dashboard.
+  - **`cors.ts` allows `*` origin.** Safe today (auth is via JWT, not origin), but tighten `Access-Control-Allow-Origin` to the site origin pre-launch as defense-in-depth.
+  - **`checkout.js` `cart_empty` friendly copy may not surface** — `supabase-js` `functions.invoke` returns non-2xx bodies via `error.context`, not `data`, so the empty-cart branch likely shows the generic error instead. Minor; the CTA shouldn't be reachable with an empty cart anyway.
+  - **Optional belt-and-suspenders:** log/alert if the webhook's `amount_total` (satang→THB) ever diverges from `orders.total_thb` (they can't today — the session is built from server-resolved prices).
 
 **Architectural notes for later phases:**
 - The CSP meta tag was NOT added in Phase 0 (deferred to Phase 3 hardening per spec). Phase 3 should add it to `components/header.html` since `<meta http-equiv="Content-Security-Policy">` in a fetched HTML fragment IS honored by browsers if it appears before any external resource loads, but it's safer to add it directly to each page's `<head>` until Phase 3.
