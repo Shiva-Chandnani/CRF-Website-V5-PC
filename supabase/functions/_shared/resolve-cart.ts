@@ -45,6 +45,7 @@ export async function resolveCart(userId: string): Promise<ResolveResult> {
       .select('price, item_type_name, design_name')
       .eq('item_type_id', item_type_id)
       .eq('fabric_design_id', fabric_design_id)
+      .eq('item_status', 'active') // don't let a stale cart line check out a discontinued item
       .maybeSingle();
     if (prodErr) return { ok: false, error: 'price_lookup_failed' };
     if (!prod || prod.price == null) return { ok: false, error: `unknown_product:${item_type_id}/${fabric_design_id}` };
