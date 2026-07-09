@@ -140,6 +140,92 @@
   }
   .modal-error[hidden] { display: none; }
 
+  /* Orders list */
+  .orders-list {
+    border-top: 1px solid var(--color-rule);
+  }
+  .order-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--color-rule);
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    transition: background var(--t-fast) var(--ease-out), opacity var(--t-fast) var(--ease-out);
+  }
+  .order-row::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--color-stone);
+    opacity: 0;
+    transition: opacity var(--t-fast) var(--ease-out);
+  }
+  .order-row:hover,
+  .order-row:focus-visible {
+    background: var(--color-cream);
+    outline: none;
+  }
+  .order-row:hover::before,
+  .order-row:focus-visible::before {
+    opacity: 1;
+  }
+  .order-row:active {
+    opacity: 0.7;
+  }
+  .order-row:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--color-jet);
+  }
+  .order-row-date {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--color-ink);
+    min-width: 100px;
+  }
+  .order-row-total {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--color-jet);
+    font-weight: 500;
+    text-align: right;
+    min-width: 80px;
+  }
+  .order-row-status {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    flex-shrink: 0;
+  }
+  .order-row-status--paid {
+    background: rgba(31,94,63,0.10);
+    color: #1f5e3f;
+  }
+  .order-row-status--pending {
+    background: var(--color-cream);
+    color: var(--color-muted);
+  }
+  .order-row-status--failed {
+    background: rgba(138,28,28,0.10);
+    color: #8a1c1c;
+  }
+  .order-row-status--canceled {
+    background: rgba(138,28,28,0.10);
+    color: #8a1c1c;
+  }
+  .orders-empty {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--color-muted);
+    padding: var(--space-5) var(--space-4);
+    margin: 0;
+  }
+
   @media (max-width: 900px) {
     .account-layout { grid-template-columns: 1fr; }
     .account-nav { position: static; flex-direction: row; flex-wrap: wrap; gap: var(--space-4); border-left: 0; padding-left: 0; }
@@ -153,6 +239,7 @@
     <div class="account-layout">
       <nav class="account-nav" aria-label="Account sections">
         <a href="#profile" aria-current="true">Profile</a>
+        <a href="#orders">Orders</a>
         <a href="#measurements">Measurements</a>
         <a href="#danger">Danger zone</a>
         <a href="#" id="signout-link">Sign out</a>
@@ -183,6 +270,12 @@
               <span id="profile-saved" hidden>Saved.</span>
             </div>
           </form>
+        </section>
+
+        <!-- Orders -->
+        <section class="account-section" id="orders" aria-labelledby="orders-title">
+          <h2 id="orders-title">Orders</h2>
+          <div data-orders-list class="orders-list"><p class="orders-empty">Loading…</p></div>
         </section>
 
         <!-- Measurements (stub buttons; Phase 2 wires forms) -->
@@ -253,7 +346,7 @@
 
   <script type="module">
     import {
-      requireAuth, signInWithPassword, signOut, deleteAccount, getUser,
+      requireAuth, signInWithPassword, signOut, deleteAccount, getUser, getSupabase,
     } from '/js/auth.js';
     import { getMyProfile, updateMyProfile } from '/js/profile.js';
 
@@ -346,6 +439,25 @@
       await signOut();
       window.location.assign('/?account_deleted=1');
     });
+
+    async function loadOrders() {
+      const el = document.querySelector('[data-orders-list]');
+      if (!el) return;
+      const sb = getSupabase();
+      const { data: orders, error } = await sb.from('orders')
+        .select('id,status,total_thb,created_at').order('created_at', { ascending: false });
+      if (error) { el.innerHTML = '<p class="orders-empty">Could not load orders.</p>'; return; }
+      if (!orders?.length) { el.innerHTML = '<p class="orders-empty">No orders yet.</p>'; return; }
+      const fmtTHB = (n) => 'THB ' + Number(n).toLocaleString('en-US');
+      const fmtDate = (s) => new Date(s).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+      el.innerHTML = orders.map(o => `
+        <a class="order-row" href="order-confirmation.html?order=${o.id}">
+          <span class="order-row-date">${fmtDate(o.created_at)}</span>
+          <span class="order-row-status order-row-status--${o.status}">${o.status}</span>
+          <span class="order-row-total">${fmtTHB(o.total_thb)}</span>
+        </a>`).join('');
+    }
+    loadOrders();
   </script>
 </body>
 </html>
