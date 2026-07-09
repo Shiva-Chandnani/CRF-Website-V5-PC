@@ -2,7 +2,7 @@
 
 Single source of truth for a new chat session to pick up where the previous one left off. Pair this with [CLAUDE.md](CLAUDE.md) (frontend rules) for full context.
 
-> **Last session ended** at: **🛒 PHASE 2 — cart dual-mode SHIPPED & MERGED to `main`** (commit `5b52b91`, 2026-07-08; offline-first server cart: `js/cart.js` stays the synchronous localStorage working copy, `js/cart-sync.js` mirrors it to a per-user `carts` row and reconciles on auth events). Full regression + 12-page CSP sweep green. **Next Phase 2 sub-projects: Stripe full checkout (orders + payments + webhook) and the measurements-capture UX** (forms wiring `js/profile.js`'s `getLatestMeasurements`/`saveMeasurements`, already exported in WT-2). ⚠️ Pre-launch reminder: re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + custom SMTP.
+> **Last session ended** at: **💳 PHASE 2 — Stripe full checkout SHIPPED on branch `phase-2/stripe-checkout`** (2026-07-09). A signed-in customer can now pay the full garment amount via Stripe Checkout (hosted, redirect): `orders` + `payments` rows are created server-side by Supabase Edge Functions (Deno), confirmed by a registered Stripe test-mode webhook. The trust boundary re-resolves all prices from `v_products` before creating the Stripe session — the client-written `carts.items` price is never used. Full regression (orders RLS, price resolution, webhook idempotency, puppeteer guest→Stripe flow, GOLD-STANDARD 4242 test-card purchase) and 13-page CSP sweep all green. **Last remaining Phase 2 sub-project: measurements-capture UX** (wire the `account.html` measurement stubs to `js/profile.js`'s `getLatestMeasurements`/`saveMeasurements`). ⚠️ Pre-launch reminders: re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + custom SMTP; **activate Stripe account** (Thai bank + identity → live keys) and register a LIVE webhook endpoint pointing at the deployed `stripe-webhook` function; add order-confirmation email (needs SMTP).
 >
 > **Phase 1 recap:** all four worktrees (WT-1 auth foundation, WT-3 measurements schema, WT-4 privacy + CSP, WT-2 auth pages) merged to `main` (2026-07-07). Customers can sign up, sign in, reset passwords, edit their profile, and delete their account.
 >
@@ -17,10 +17,9 @@ Single source of truth for a new chat session to pick up where the previous one 
 >
 > **✅ Image-transformation 403 — RESOLVED 2026-07-06.** Earlier the Supabase `render/image` endpoint returned `403 FeatureNotEnabled`, breaking all product images site-wide (`js/data-loader.js` builds render-endpoint URLs). Owner upgraded to **Supabase Pro + enabled Image Transformation** (Storage → Settings). Verified: render endpoint `200 image/jpeg` (widths 140/200/1400), shop + PDP images render, `scripts/test-swatch-prefers-hero.mjs` green. Full Phase 0 image gate restored.
 >
-> **What's next — Phase 2 (Commerce):** cart dual-mode is the 1st of 3 sub-projects and is now **✅ shipped/merged** (see §7 "Phase 2 — cart dual-mode"). Remaining:
-> 1. **Stripe full checkout** (orders + payments tables + webhook) — **START HERE, begin with `superpowers:brainstorming`**. Design phase needs NOTHING from Stripe. Building/testing needs only a free **test-mode** account (test keys → `.env.local`, test cards, `stripe listen` for webhooks) — no business/bank verification. Full account **activation** (Thai bank + identity → live keys) is a **pre-launch** step. Stripe supports Thailand + THB. ⚠️ At the cart→order snapshot, **re-resolve prices server-side + validate `items[]` shape — never trust the client-written `carts.items` blob** (owner-only RLS governs who writes, not what shape).
-> 2. **Measurements-capture UX** — wire the `account.html` measurement stubs (and any checkout step) to `js/profile.js`'s already-exported `getLatestMeasurements`/`saveMeasurements`. Schema shipped in Phase 1 WT-3. Largely independent of cart/Stripe.
-> 3. Pre-launch chores: re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + configure custom SMTP (signup.html already branches on whether a session comes back, so it will show the check-your-email flow automatically once confirmation is on); move `frame-ancestors`/clickjacking protection into an HTTP header (Phase 3 CSP hardening).
+> **What's next — Phase 2 (Commerce):** cart dual-mode (1st sub-project) ✅ shipped/merged 2026-07-08. Stripe full checkout (2nd sub-project) ✅ shipped on `phase-2/stripe-checkout` 2026-07-09 — ready to merge. Remaining:
+> 1. **Measurements-capture UX** — wire the `account.html` measurement stubs (and any checkout step) to `js/profile.js`'s already-exported `getLatestMeasurements`/`saveMeasurements`. Schema shipped in Phase 1 WT-3. Largely independent of cart/Stripe. **START HERE.**
+> 2. Pre-launch chores: re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + configure custom SMTP; **activate Stripe account** (Thai bank + identity → live keys) and register a LIVE webhook endpoint pointing at the deployed `stripe-webhook` function; add order-confirmation transactional email; move `frame-ancestors`/clickjacking protection into an HTTP header (Phase 3 CSP hardening).
 >
 > **Phase 1 agentic cycle reference:** `superpowers:brainstorming` → `superpowers:writing-plans` → `superpowers:using-git-worktrees` → `superpowers:subagent-driven-development` → `superpowers:verification-before-completion` → `superpowers:requesting-code-review` → `superpowers:finishing-a-development-branch`. Full methodology: `~/.claude/plans/just-to-revamp-the-agile-sundae.md`. Phase 0 retrospective notes live at the end of [§7](#7-open--next-steps) under "Phase 0 — shipped".
 
@@ -47,7 +46,8 @@ A static HTML/CSS/vanilla-JS website for **Country Road Fashions** — a Bangkok
 | `/login.html` | [login.html](login.html) | Sign in (Phase 1 WT-2) — check_email/confirmed/reset status banners; honors `?next=` |
 | `/forgot-password.html` | [forgot-password.html](forgot-password.html) | Constant-time reset request (Phase 1 WT-2) |
 | `/reset-password.html` | [reset-password.html](reset-password.html) | Set new password from recovery link (Phase 1 WT-2) |
-| `/account.html` | [account.html](account.html) | Signed-in account (Phase 1 WT-2) — profile edit + measurement stubs + delete-account modal. `requireAuth` gated |
+| `/account.html` | [account.html](account.html) | Signed-in account (Phase 1 WT-2) — profile edit + measurement stubs + Orders history section + delete-account modal. `requireAuth` gated |
+| `/order-confirmation.html?order=<uuid>` | [order-confirmation.html](order-confirmation.html) | Post-payment confirmation (Phase 2 Stripe checkout) — `requireAuth`; reads order via owner-RLS; renders the order summary as a brand spec-sheet docket; polls up to ~7.5s to absorb webhook lag |
 
 Start dev server: `node serve.mjs` (port 3000). Don't start a second instance if already running. **Auth pages + `js/auth.js`/`js/profile.js` require `@supabase/supabase-js` (installed `--no-save`) and load it in the browser from esm.sh.**
 
@@ -88,6 +88,8 @@ v_latest_body_measurements · v_latest_jacket_reference · v_latest_shirt_refere
 
 COMMERCE (Phase 2):
 carts (Phase 2; user_id pk → profiles on delete cascade, items jsonb, updated_at) — owner-only RLS; server mirror of the localStorage cart
+orders (Phase 2 Stripe; id uuid pk, user_id → profiles on delete set null [nullable; preserves records after PDPA deletion], status pending|paid|failed|canceled, currency thb, total_thb integer [whole baht], items jsonb [server-resolved snapshot], stripe_checkout_session_id, stripe_payment_intent_id, created_at, updated_at [touch_updated_at trigger]) — owner-only SELECT; NO client write policies (Edge Functions write via service_role only). Migration: db/11_orders.sql.
+payments (Phase 2 Stripe; id uuid pk, order_id → orders on delete cascade, stripe_payment_intent_id, stripe_event_id text UNIQUE [webhook idempotency key], amount_thb, currency, status succeeded|failed|refunded, raw jsonb, created_at) — owner-only SELECT via join to orders. NO client write policies.
 ```
 
 **Auth:** Supabase Auth. Email confirmation currently DISABLED (`mailer_autoconfirm=true`) — re-enable + SMTP before launch. `js/auth.js` (WT-1) is the client wrapper; `js/profile.js` (WT-2) is profile/measurement CRUD.
@@ -117,6 +119,8 @@ carts (Phase 2; user_id pk → profiles on delete cascade, items jsonb, updated_
 | `v_customization_catalog` | view: `(item_type, category, option)` resolved + ordered for the drawer. |
 | `newsletter_subscribers` | Phase 0 — `(email pk, profile_id uuid nullable, source, opted_in_at, unsubscribed_at, created_at)`. RLS: anon INSERT only (intentionally no anon UPDATE/SELECT to prevent mass-mutation + email enumeration), authenticated owners SELECT own row. Migration: `db/07_newsletter_subscribers.sql`. |
 | `carts` | Phase 2 — one row per signed-in user (`user_id pk → profiles on delete cascade, items jsonb, updated_at`). Owner-only RLS; server mirror of the localStorage cart, reconciled on auth events. Migration: `db/10_carts.sql`. |
+| `orders` | Phase 2 Stripe — one row per purchase attempt (`id uuid pk`, `user_id → profiles on delete set null` nullable, `status pending\|paid\|failed\|canceled`, `total_thb integer`, `items jsonb` server-resolved snapshot, `stripe_checkout_session_id`, `stripe_payment_intent_id`, `updated_at`). Owner-only SELECT; written only by Edge Functions via service_role. Migration: `db/11_orders.sql`. |
+| `payments` | Phase 2 Stripe — one row per `checkout.session.completed` event (`order_id → orders on delete cascade`, `stripe_event_id text UNIQUE` for idempotency, `amount_thb`, `status succeeded\|failed\|refunded`, `raw jsonb`). Owner-only SELECT via join to orders. Migration: `db/11_orders.sql`. |
 
 ### Storage
 
@@ -136,6 +140,7 @@ Two public buckets:
 ├── index.html, shop.html, product.html, book-appointment.html, in-store.html, cart.html   # catalogue pages
 ├── privacy.html                  # Phase 1 WT-4 — PDPA notice
 ├── signup.html, login.html, forgot-password.html, reset-password.html, account.html        # Phase 1 WT-2 — auth
+├── order-confirmation.html       # Phase 2 Stripe — post-payment docket; requireAuth; owner-RLS order read
 ├── serve.mjs                     # localhost:3000 dev server (vanilla node http)
 ├── screenshot.mjs                # puppeteer screenshot → temporary screenshots/screenshot-N[-label].png (1440×900)
 ├── package.json                  # deps: puppeteer, pg. NOTE: @supabase/supabase-js installed --no-save (not in package.json)
@@ -154,6 +159,7 @@ Two public buckets:
 │   ├── meta.js                   # Phase 0 — setMeta() no-op skeleton (Phase 3 fills it)
 │   ├── auth.js                   # Phase 1 WT-1 — Supabase Auth wrapper (spec §6.1) + header account-link swap; imports supabase from esm.sh (browser-only)
 │   ├── profile.js                # Phase 1 WT-2 — getMyProfile/updateMyProfile + getLatestMeasurements/saveMeasurements (last two: Phase 2 UI). client() lazily imports auth.js
+│   ├── checkout.js               # Phase 2 Stripe — document-level click delegation on [data-checkout-button]; requireAuth bounces guests; flushes localStorage cart to server carts row; invokes create-checkout-session Edge Function; redirects to Stripe
 │   └── schema.d.ts               # TypeScript types (IDE only; NOT updated for profiles/measurements — stale)
 │
 ├── assets/customization/svg/     # 65 placeholder line-art SVGs (one per customization option)
@@ -164,6 +170,8 @@ Two public buckets:
 │   ├── 07_newsletter_subscribers.sql    # Phase 0 — newsletter capture table + RLS
 │   ├── 08_profiles.sql                  # Phase 1 WT-1 — profiles + RLS + handle_new_user trigger + delete_my_account RPC
 │   ├── 09_measurements.sql              # Phase 1 WT-3 — 4 measurement tables + 16 RLS policies + 4 v_latest_* views (security_invoker)
+│   ├── 10_carts.sql                     # Phase 2 cart — carts table + 4 owner-only RLS policies
+│   ├── 11_orders.sql                    # Phase 2 Stripe — orders + payments tables, RLS, orders_set_updated_at trigger; idempotent, transaction-wrapped
 │   └── README.md                        # initial Supabase setup guide (one-time onboarding)
 │
 ├── scripts/
@@ -180,13 +188,30 @@ Two public buckets:
 │   │  # ── TEST SUITE (all green on main; run with serve.mjs up from repo root) ──
 │   ├── test-customizer-flow / -design-hero-rail / -swatch-prefers-hero   # Phase 0 catalogue UI
 │   ├── test-layout-mount / -newsletter-submit / -token-discipline        # Phase 0 spine
-│   ├── test-csp-compliance.mjs              # Phase 1 — 12-page CSP zero-violation sweep (extend PAGES for new pages)
+│   ├── test-csp-compliance.mjs              # Phase 1 — 13-page CSP zero-violation sweep (extended for order-confirmation.html in Phase 2)
 │   ├── test-auth-* / test-profile-rls / test-trigger-newsletter-backfill / test-delete-rpc   # WT-1 auth
 │   ├── test-measurements-{rls,views,cascade}.mjs                         # WT-3 measurements
 │   ├── test-privacy-page.mjs                # WT-4 privacy
 │   ├── test-{profile-module,signup-flow,forgot-reset,account-profile-crud,account-delete,route-guards}.mjs  # WT-2 auth pages
-│   └── test-cart-{merge,rls,dual-mode}.mjs  # Phase 2 cart dual-mode (merge: 13 pure cases; rls: owner isolation + cascade; dual-mode: pptr e2e)
+│   ├── test-cart-{merge,rls,dual-mode}.mjs  # Phase 2 cart dual-mode (merge: 13 pure cases; rls: owner isolation + cascade; dual-mode: pptr e2e)
+│   ├── test-orders-rls.mjs              # Phase 2 Stripe — owner-read-only + write-locked + duplicate-event idempotency
+│   ├── test-checkout-price-resolution.mjs  # Phase 2 Stripe — server re-prices items, ignores tampered client price; auth + empty-cart guards
+│   ├── test-webhook-handler.mjs         # Phase 2 Stripe — paid + payment row + cart clear on completed; idempotent replay; expired → canceled
+│   ├── test-checkout-flow.mjs           # Phase 2 Stripe — puppeteer: guest→login redirect, signed-in→Stripe redirect
+│   └── test-checkout-purchase-e2e.mjs   # Phase 2 Stripe — GOLD-STANDARD: real 4242 test-card purchase → registered webhook → order paid (manual/e2e; not offline CI)
 │      # NOTE: test scripts read .env.local manually (no dotenv). Auth tests use admin createUser (bypasses email blocklist).
+│
+├── supabase/
+│   ├── config.toml                          # sets verify_jwt=true for create-checkout-session, verify_jwt=false for stripe-webhook
+│   └── functions/
+│       ├── _shared/
+│       │   ├── cors.ts                      # CORS headers helper
+│       │   ├── clients.ts                   # Stripe client (pinned stripe@18.5.0), adminClient(), callerUserId() JWT resolver
+│       │   └── resolve-cart.ts              # TRUST BOUNDARY: reads carts row, validates item shape, re-prices every line from v_products; never trusts client price_thb; uses design_name column
+│       ├── create-checkout-session/
+│       │   └── index.ts                     # verify_jwt=true; rejects anon/empty/invalid carts; inserts pending order with re-priced snapshot; creates branded Stripe Checkout Session (mode=payment, currency=thb, metadata.order_id, bespoke text, THB×100); returns {url, order_id}
+│       └── stripe-webhook/
+│           └── index.ts                     # verify_jwt=false; Stripe-signature-verified via constructEventAsync + createSubtleCryptoProvider; checkout.session.completed → order paid + payments row + clear server cart; checkout.session.expired → canceled; idempotent by stripe_event_id
 │
 ├── brand_assets/
 │   ├── CRF Logo.png
@@ -299,9 +324,9 @@ A **phase** is a sequence of these units. Phase ends when all its features are m
 | 2 | Add items to cart | 2 (server-side cart dual-mode) | ✅ done — V1 localStorage + Phase 2 offline-first server mirror (merged 2026-07-08) |
 | 3 | Site-wide search (header) | 3 | ⬜ |
 | 4 | Shop page filters + search | 3 | ⬜ (basic input exists in shop.html) |
-| 5 | Customer login + profile (email/password + Google) | 1 | ⬜ |
-| 6 | Measurements capture | 1 (schema) + 2 (UX) | ⬜ |
-| 7 | Stripe checkout + payment page | 2 | ⬜ **NEXT** — full Stripe. Build on test-mode keys (no verification needed); activate account (Thai bank + identity) at launch. Snapshot cart→order must re-resolve prices + validate server-side (see §7 next-steps). |
+| 5 | Customer login + profile (email/password + Google) | 1 | ✅ done — Phase 1 complete (merged 2026-07-07). Email/password auth + profiles + measurements schema + auth pages + privacy page. Google OAuth deferred. |
+| 6 | Measurements capture | 1 (schema) + 2 (UX) | 🔶 schema ✅ done (Phase 1 WT-3); UX ⬜ **NEXT Phase 2** |
+| 7 | Stripe checkout + payment page | 2 | ✅ done — full Stripe hosted checkout shipped 2026-07-09 (branch `phase-2/stripe-checkout`). Orders + payments + webhook + order-confirmation page. Pre-launch: activate account (Thai bank + identity → live keys) + register live webhook endpoint + order-confirmation email. |
 | 8 | Admin dashboard (analytics + customers) | 5 | ⬜ |
 | 9 | CRM sync | 5 | ⬜ |
 | 10 | Professional polish | Continuous | ⬜ |
@@ -328,8 +353,8 @@ A **phase** is a sequence of these units. Phase ends when all its features are m
 | Phase | Goal | Items | Notes |
 |---|---|---|---|
 | **0 — Foundation Refactor** | One shared spine for every page | Shared header/footer, `css/base.css`, normalized `.btn` system, meta scaffold, newsletter capture table + footer-form wiring (item 13 capture half) | **✅ shipped 2026-05-31** (commit `623c9c3`). Retrospective notes in the "Phase 0 — shipped" subsection below. |
-| **1 — Identity & Personal Data** | Customers exist; we capture them | 5, 6 (schema), 14 (privacy page draft + CSP baseline) | **EXECUTE NEXT.** Strict prereq for everything personal. Spec carryover below. |
-| 2 — Commerce | Real cart + paid orders | 2 (cart dual-mode upgrade ✅ merged 2026-07-08), 6 (UX during checkout ⬜), 7 (Stripe ⬜ NEXT) | Depends on Phase 1. Cart dual-mode done; Stripe + measurements UX remain. |
+| **1 — Identity & Personal Data** | Customers exist; we capture them | 5, 6 (schema), 14 (privacy page draft + CSP baseline) | **✅ shipped 2026-07-07** (all 4 worktrees merged to main). |
+| 2 — Commerce | Real cart + paid orders | 2 (cart dual-mode ✅ merged 2026-07-08), 7 (Stripe checkout ✅ shipped 2026-07-09), 6 (measurements UX ⬜ **NEXT**) | Depends on Phase 1. Cart dual-mode + Stripe checkout done; only measurements-capture UX remains. |
 | 3 — Discovery + SEO + Privacy hardening | Findability + production-ready security | 3, 4, 11, 14 (CSP tighten + RLS audit) | Many parallel streams. |
 | 4 — Customization expansion | Jacket + Trouser drawers | 1 (extend) | Half session. Schema already supports it (see §10). |
 | 5 — Operations | Admin + CRM | 8, 9 | Needs real data flowing. |
@@ -538,10 +563,46 @@ Shared spine landed. Every existing page now mounts `components/header.html` + `
   cross-device pull, identical-line dedupe). Full regression suite (cart-merge,
   cart-rls, cart-dual-mode, customizer-flow, layout-mount, newsletter-submit,
   token-discipline) + 12-page CSP sweep all green.
-- **Out of scope / next:** Stripe full checkout (orders / payments / webhook)
-  will snapshot the cart into an `orders` row at purchase; measurements-capture
-  UX (wire `js/profile.js` `getLatestMeasurements`/`saveMeasurements` into the
-  account.html forms).
+- **Out of scope / next (at the time of cart dual-mode merge):** Stripe full checkout (orders / payments / webhook) — shipped in the next sub-project (see below). Measurements-capture UX still pending.
+
+### Phase 2 — Stripe full checkout (SHIPPED 2026-07-09)
+
+Hosted Stripe Checkout flow — a signed-in customer pays the full garment amount upfront; durable `orders` + `payments` records are confirmed by a registered Stripe test-mode webhook. Full-amount-upfront design decision; sign-in required; "Reserve Consultation" CTA kept as secondary alongside a new "Proceed to Checkout" primary CTA.
+
+- **DB** `db/11_orders.sql` — transaction-wrapped, idempotent. Two new tables:
+  - `orders` — `id uuid pk`, `user_id → profiles(id) on delete set null` (nullable; preserves financial records after PDPA account deletion), `status` (`pending|paid|failed|canceled`, default `pending`), `currency` (default `'thb'`), `total_thb integer` (whole baht — amounts stored as integers; ×100 satang conversion happens only at the Stripe API boundary), `items jsonb` (authoritative server-resolved snapshot), `stripe_checkout_session_id`, `stripe_payment_intent_id`, `created_at`, `updated_at` (kept current by an `orders_set_updated_at` trigger reusing `public.touch_updated_at()`).
+  - `payments` — `id uuid pk`, `order_id → orders(id) on delete cascade`, `stripe_payment_intent_id`, `stripe_event_id text UNIQUE` (webhook idempotency key), `amount_thb`, `currency`, `status` (`succeeded|failed|refunded`), `raw jsonb`, `created_at`.
+  - RLS: owner-only SELECT on both (`auth.uid() = user_id`; payments via join to orders). **NO client write policies** — orders and payments are written ONLY by Edge Functions via the service_role key.
+- **Supabase Edge Functions** (Deno runtime; deployed to project `fzgsogdceptjvuahukbn`):
+  - `supabase/functions/_shared/cors.ts` — CORS headers helper.
+  - `supabase/functions/_shared/clients.ts` — Stripe client pinned at `stripe@18.5.0`, `adminClient()` (service_role Supabase client), `callerUserId()` JWT resolver.
+  - `supabase/functions/_shared/resolve-cart.ts` — **the trust boundary**: reads the user's `carts` row, validates item shape, RE-PRICES every line from `v_products`. The client-written `price_thb` is ignored. Uses the `design_name` column (not `fabric_design_name`). Any malformed item or tampered price causes an early-reject 400.
+  - `supabase/functions/create-checkout-session/index.ts` — `verify_jwt=true` (rejects anon with 401); validates non-empty, shape-valid cart; inserts a `pending` order with the re-priced server snapshot; creates a branded hosted Checkout Session (`mode=payment`, `currency=thb`, `metadata.order_id`, `client_reference_id=order_id`, bespoke brand text, amounts in THB×100 satang); returns `{ url, order_id }`.
+  - `supabase/functions/stripe-webhook/index.ts` — `verify_jwt=false` (public endpoint; verified instead via Stripe-signature + Deno's `constructEventAsync` + `createSubtleCryptoProvider`). On `checkout.session.completed` → marks order `paid` + inserts a `payments` row + clears the user's server cart. On `checkout.session.expired` → marks order `canceled`. Idempotent by `stripe_event_id` UNIQUE constraint.
+  - `supabase/config.toml` sets `[functions.create-checkout-session] verify_jwt=true` and `[functions.stripe-webhook] verify_jwt=false`.
+- **Toolchain / infrastructure reality for the next session:**
+  - **Docker is NOT installed** on this machine, so `supabase functions serve` (which requires Docker) cannot run locally. All Edge Functions were developed and tested against the **deployed** endpoint (`https://fzgsogdceptjvuahukbn.supabase.co/functions/v1/<name>`). Phase 2 test scripts default `FUNCTIONS_URL` to that deployed base.
+  - New tools installed via Homebrew: Supabase CLI, Deno, Stripe CLI.
+  - Supabase secrets set (test-mode): `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`.
+  - A **test-mode Stripe webhook endpoint is registered** (`we_1TrF0rDwo6ikvP7neZBkGwwi`) for `checkout.session.completed` + `checkout.session.expired`, pointing at the deployed `stripe-webhook` function — so checkout completes unattended without needing `stripe listen` running locally.
+  - `.env.local` (gitignored) now also holds `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SITE_URL=http://localhost:3000`.
+- **New client surface:**
+  - `js/checkout.js` — document-level click delegation on `[data-checkout-button]` (survives `cart.html`'s dynamic re-renders); `requireAuth` bounces unauthenticated visitors to `/login.html?next=cart.html`; flushes the localStorage cart to the server `carts` row, then invokes `create-checkout-session` and redirects to Stripe.
+  - `cart.html` — "Proceed to Checkout" primary CTA added (data-checkout-button); "Reserve Consultation" kept as secondary; `[data-checkout-error]` error line; imports `js/checkout.js`.
+  - `order-confirmation.html` (NEW page) — `requireAuth`; reads `?order=` UUID via owner-RLS select from `orders`; renders the order summary as a brand spec-sheet docket with italic-serif + stone-hairline "confirmed" headline; polls up to ~5×1.5s to absorb webhook lag; HTML-escapes all DB values; dark header; per-page CSP block.
+  - `account.html` — added an "Orders" history section listing past orders (date · status pill · total), each linking to `order-confirmation.html`.
+- **Tests (all green):**
+  - `test-orders-rls.mjs` — owner-read-only, write-locked, duplicate-event idempotency.
+  - `test-checkout-price-resolution.mjs` — server re-prices items correctly, ignores tampered client `price_thb`; auth and empty-cart guards work.
+  - `test-webhook-handler.mjs` — `paid` status + `payments` row + cart clear on `completed`; idempotent replay; `expired` → `canceled`.
+  - `test-checkout-flow.mjs` — puppeteer: guest→login redirect, signed-in→Stripe redirect.
+  - `test-checkout-purchase-e2e.mjs` — **GOLD-STANDARD**: real 4242 test-card purchase through Stripe's hosted UI → registered webhook fires → order marked `paid`. Drives the live Stripe hosted page (Puppeteer), so it is a manual/e2e check — not part of the offline CI suite; requires the registered webhook endpoint or `stripe listen`.
+  - `test-csp-compliance.mjs` extended to 13 pages (added `order-confirmation.html`). Full prior suite (cart-merge, cart-rls, customizer-flow, layout-mount, newsletter-submit, token-discipline) still green.
+- **Out of scope / pre-launch items for the next session:**
+  - **Activate Stripe account** (Thai bank + identity documents → live keys). Swap `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` secrets in Supabase and register a **LIVE mode** webhook endpoint pointing at the deployed `stripe-webhook` function.
+  - **Order-confirmation email** — currently there is no transactional email after payment. Needs SMTP (blocked on the same email-confirmation SMTP setup pending from Phase 1).
+  - **Embedded Payment Element** — the hosted Checkout cannot load custom fonts (it is a Stripe-branded redirect page). Switching to Stripe's embedded Payment Element would allow full brand control. Deferred post-launch.
+  - Measurements-capture UX remains the only open Phase 2 sub-project.
 
 **Architectural notes for later phases:**
 - The CSP meta tag was NOT added in Phase 0 (deferred to Phase 3 hardening per spec). Phase 3 should add it to `components/header.html` since `<meta http-equiv="Content-Security-Policy">` in a fetched HTML fragment IS honored by browsers if it appears before any external resource loads, but it's safer to add it directly to each page's `<head>` until Phase 3.
