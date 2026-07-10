@@ -115,6 +115,7 @@ async function loadKind(def) {
 
 async function onSave(e, def, status, btn) {
   e.preventDefault();
+  if (btn.dataset.saving) return;              // block reentrant submit (Enter mid-save)
   const form = e.currentTarget;
   status.hidden = true;
   status.classList.remove('measure-status--error', 'measure-status--ok');
@@ -124,9 +125,11 @@ async function onSave(e, def, status, btn) {
     status.hidden = false;
     return;
   }
+  btn.dataset.saving = '1';
   btn.disabled = true;
   const { data, error } = await saveMeasurements(def.kind, collect(form, def));
   btn.disabled = false;
+  delete btn.dataset.saving;
   if (error) {
     status.textContent = 'Could not save — ' + (error.message || 'please try again.');
     status.classList.add('measure-status--error');
@@ -158,7 +161,8 @@ function showKind(kind) {
 }
 
 async function init() {
-  await requireAuth({ redirectTo: '/login.html' });
+  const session = await requireAuth({ redirectTo: '/login.html' });
+  if (!session) return;                        // redirect already fired for guests
   const nav   = document.getElementById('measure-nav');
   const mount = document.getElementById('measure-forms');
   for (const def of MEASUREMENT_SCHEMA) {
