@@ -131,6 +131,35 @@ export async function searchProducts(filters = {}) {
 }
 
 // -----------------------------------------------------------------------------
+// Ranked search (Phase 3) — server-side via the search_products RPC.
+// productSearch: query + optional structured filters (shop page, combined AND).
+// quickSearch:   query only, capped (header typeahead overlay).
+// Both return the same v_products row shape searchProducts returns.
+// -----------------------------------------------------------------------------
+export async function productSearch(query, filters = {}) {
+  const q = (query || '').trim();
+  if (!q) return searchProducts(filters); // empty query → existing filter-only path
+  const { data, error } = await supabase.rpc('search_products', {
+    search_query:     q,
+    p_category_id:    filters.categoryId    ?? null,
+    p_subcategory_id: filters.subcategoryId ?? null,
+    p_fabric_type_id: filters.fabricTypeId  ?? null,
+    p_pattern:        filters.pattern       ?? null,
+    p_color:          filters.color         ?? null,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function quickSearch(query, limit = 6) {
+  const q = (query || '').trim();
+  if (!q) return [];
+  const { data, error } = await supabase.rpc('search_products', { search_query: q });
+  if (error) throw error;
+  return data.slice(0, limit);
+}
+
+// -----------------------------------------------------------------------------
 // Image URL helpers
 // -----------------------------------------------------------------------------
 

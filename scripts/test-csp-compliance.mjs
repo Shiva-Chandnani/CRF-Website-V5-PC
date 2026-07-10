@@ -59,6 +59,15 @@ async function checkPage(browser, path) {
   // Allow late-firing inline scripts / layout-ready hooks to complete.
   await new Promise((r) => setTimeout(r, 750));
 
+  // Phase 3: exercise the search overlay so its fetch/render is CSP-checked.
+  const hasSearch = await page.$('[data-search-btn]');
+  if (hasSearch) {
+    await page.click('[data-search-btn]').catch(() => {});
+    await page.waitForSelector('#search-overlay[data-open="1"]', { timeout: 3000 }).catch(() => {});
+    await page.type('[data-search-input]', 'wool').catch(() => {});
+    await new Promise((r) => setTimeout(r, 600)); // let debounced quickSearch fire + images load
+  }
+
   await page.close();
   return { path, violations };
 }

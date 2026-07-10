@@ -28,6 +28,7 @@
   :root { --color-jet:#0E0F11; --color-charcoal:#1A1B1F; }
 </style>
 <script type="module" src="/js/layout.js"></script>
+<script type="module" src="/js/search-overlay.js"></script>
 <script type="module" src="/js/newsletter.js"></script>
 <script type="module" src="/js/meta.js"></script>
 <style>
@@ -522,7 +523,7 @@
 
 <script type="module">
   import {
-    getCategories, getSubcategoriesFor, fabricImageUrl, productImageUrl, searchProducts, supabase
+    getCategories, getSubcategoriesFor, fabricImageUrl, productImageUrl, searchProducts, productSearch, supabase
   } from './js/data-loader.js';
 
   // ---------- Item-kind singularised label (for "The Cavani Wool ___") ----------
@@ -559,10 +560,16 @@
     pattern:       params.get('pattern')     || null,
     color:         params.get('color')       || null,
     sort:          'recommended',
-    query:         '',
+    query:         params.get('q') || '',
     products:      [],
     categories:    [],
   };
+
+  // Generation counter: a superseded async load never assigns/renders (guards
+  // the stale-response race between text search, filter, and sort reloads).
+  let loadSeq = 0;
+  // Hoisted so a filter/sort reload can cancel a queued keystroke debounce.
+  let searchTimer = null;
 
   // ---------- Helpers ----------
   const $  = (sel) => document.querySelector(sel);
@@ -602,14 +609,19 @@
     wireSwatchInteractions();
 
     // Fetch products with current filters
-    await loadProducts();
-    renderAll();
+    if (await loadProducts()) renderAll();
+
+    // Reflect any ?q= into the search box
+    $('#searchInput').value = state.query;
 
     // Wire interactions
     $('#sortSelect').addEventListener('change', (e) => { state.sort = e.target.value; renderGrid(); });
     $('#searchInput').addEventListener('input', (e) => {
-      state.query = e.target.value.trim().toLowerCase();
-      renderGrid();
+      state.query = e.target.value.trim();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(async () => {
+        if (await loadProducts()) renderAll();
+      }, 250);
     });
     $('#filterToggle').addEventListener('click', () => {
       const layout = $('#shopLayout');
@@ -621,14 +633,20 @@
   }
 
   async function loadProducts() {
+    const mySeq = ++loadSeq;
     const filters = {
-      categoryId:    state.categoryId    || undefined,
-      subcategoryId: state.subcategoryId || undefined,
-      fabricTypeId:  state.fabricTypeId  || undefined,
-      pattern:       state.pattern       || undefined,
-      color:         state.color         || undefined,
+      categoryId:    state.categoryId    || null,
+      subcategoryId: state.subcategoryId || null,
+      fabricTypeId:  state.fabricTypeId  || null,
+      pattern:       state.pattern       || null,
+      color:         state.color         || null,
     };
-    state.products = await searchProducts(filters);
+    // productSearch: server-ranked when a query is present; falls back to the
+    // filter-only path (searchProducts) when the query is blank.
+    const rows = await productSearch(state.query, filters);
+    if (mySeq !== loadSeq) return false;   // a newer load superseded this one
+    state.products = rows;
+    return true;
   }
 
   function renderAll() {
@@ -734,15 +752,18 @@
   }
 
   async function refresh() {
+    // Cancel any queued keystroke-triggered reload so it can't land stale
+    // after this filter/sort-driven reload.
+    clearTimeout(searchTimer);
     $('#productCount').textContent = 'Loading…';
-    await loadProducts();
+    const won = await loadProducts();
     // re-evaluate page title if category changed
     const cat = state.categories.find(c => c.id === state.categoryId);
     const t = pageTitleFor(cat);
     $('#shop-title').innerHTML = state.categoryId ? 'The ' + t.title + ' Collection' : 'The <em>Bespoke</em> Collection';
     $('#shop-tagline').textContent = t.tagline;
     $('#crumb-leaf').textContent = t.leaf;
-    renderAll();
+    if (won) renderAll();
   }
 
   function sortProducts(list) {
@@ -751,28 +772,22 @@
       case 'price-asc':  arr.sort((a, b) => a.price - b.price); break;
       case 'price-desc': arr.sort((a, b) => b.price - a.price); break;
       case 'name':       arr.sort((a, b) => a.design_name.localeCompare(b.design_name)); break;
-      default: arr.sort((a, b) =>
-        (a.item_type_id.localeCompare(b.item_type_id)) ||
-        (a.fabric_number.localeCompare(b.fabric_number))
-      );
+      case 'recommended':
+      default:
+        if (state.query) break; // active query → keep server relevance order
+        arr.sort((a, b) =>
+          (a.item_type_id.localeCompare(b.item_type_id)) ||
+          (a.fabric_number.localeCompare(b.fabric_number))
+        );
     }
     return arr;
   }
 
   function renderGrid() {
     const grid = $('#productGrid');
-    const q = state.query;
-    let list = state.products;
-    if (q) {
-      list = list.filter(p =>
-        p.design_name.toLowerCase().includes(q)        ||
-        p.fabric_type_name.toLowerCase().includes(q)   ||
-        p.fabric_number.toLowerCase().includes(q)      ||
-        p.item_type_name.toLowerCase().includes(q)     ||
-        (p.color || []).some(c => c.toLowerCase().includes(q))
-      );
-    }
-    list = sortProducts(list);
+    // state.products is already the server-side (ranked) result set for the
+    // current query + filters — no client-side substring filtering here.
+    let list = sortProducts(state.products);
 
     // Group into cards
     const groups = groupForCards(list);
