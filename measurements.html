@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline' https://esm.sh https://assets.calendly.com;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://assets.calendly.com;
+  font-src 'self' https://fonts.gstatic.com;
+  img-src 'self' data: https://*.supabase.co https://placehold.co;
+  media-src 'self';
+  connect-src 'self' https://*.supabase.co wss://*.supabase.co;
+  frame-src https://calendly.com;
+  form-action 'self';
+  base-uri 'self';
+  object-src 'none';
+">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Your measurements — Country Road Fashions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Raleway:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="preload" as="fetch" href="/components/header.html" crossorigin>
+<link rel="preload" as="fetch" href="/components/footer.html" crossorigin>
+<link rel="stylesheet" href="/css/base.css">
+<style>
+  :root { --color-jet:#0E0F11; --color-charcoal:#1A1B1F; }
+</style>
+<script type="module" src="/js/layout.js"></script>
+<script type="module" src="/js/auth.js"></script>
+<style>
+  .measure-shell { max-width: var(--container-max); margin: 0 auto; padding: var(--space-8) var(--space-6); background: var(--color-off-white); }
+  .measure-shell h1 {
+    font-family: var(--font-serif); font-weight: 500;
+    font-size: clamp(36px, 5vw, 56px); line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight); color: var(--color-jet); margin: 0 0 var(--space-2);
+  }
+  .measure-shell h1 em { font-style: italic; border-bottom: 1px solid var(--color-stone); }
+  .measure-intro { color: var(--color-muted); max-width: 60ch; margin: 0 0 var(--space-6); line-height: 1.7; }
+  .measure-layout { display: grid; grid-template-columns: 220px 1fr; gap: var(--space-7); align-items: start; }
+  .measure-nav {
+    position: sticky; top: calc(var(--header-h) + var(--space-5));
+    display: flex; flex-direction: column; gap: var(--space-2);
+    border-left: 1px solid var(--color-rule); padding-left: var(--space-4);
+  }
+  .measure-nav__link {
+    font-size: 13px; letter-spacing: 0.04em; color: var(--color-muted);
+    padding: var(--space-2) 0; width: fit-content;
+    border-bottom: 1px solid transparent; transition: color var(--t-fast) var(--ease-out);
+  }
+  .measure-nav__link:hover, .measure-nav__link:focus-visible, .measure-nav__link[aria-current="true"] { color: var(--color-jet); }
+  .measure-panel { max-width: 720px; }
+  .measure-empty { color: var(--color-muted); font-style: italic; margin: 0 0 var(--space-5); }
+  .measure-group { border: 0; margin: 0 0 var(--space-6); padding: 0; }
+  .measure-group__legend {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--color-muted); padding: 0 0 var(--space-3); border-bottom: 1px solid var(--color-rule); width: 100%;
+  }
+  .measure-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--space-4); margin-top: var(--space-4); }
+  .measure-field { display: flex; flex-direction: column; gap: 6px; }
+  .measure-field--notes { margin-top: var(--space-4); }
+  .measure-field__label { font-size: 13px; color: var(--color-ink); }
+  .measure-field__control { position: relative; display: flex; align-items: center; }
+  .measure-field__control .input { width: 100%; padding-right: 42px; }
+  .measure-field__unit { position: absolute; right: 12px; font-size: 12px; color: var(--color-muted); pointer-events: none; }
+  .measure-field__hint { font-size: 12px; color: var(--color-muted); }
+  .input--error { border-color: #b3261e !important; }
+  .measure-actions { display: flex; align-items: center; gap: var(--space-4); margin-top: var(--space-6); }
+  .measure-status { font-size: 13px; margin: 0; }
+  .measure-status--ok { color: #1a7f4b; }
+  .measure-status--error { color: #b3261e; }
+  @media (max-width: 900px) {
+    .measure-layout { grid-template-columns: 1fr; }
+    .measure-nav { position: static; flex-direction: row; flex-wrap: wrap; gap: var(--space-4); border-left: 0; padding-left: 0; }
+  }
+</style>
+</head>
+<body>
+  <div data-layout="header" style="min-height:72px;background:var(--color-jet);"></div>
+  <main class="measure-shell">
+    <h1>Your <em>Measurements</em></h1>
+    <p class="measure-intro">Enter what you know — every field is optional; our tailor confirms everything at your fitting.</p>
+    <div class="measure-layout">
+      <nav class="measure-nav" id="measure-nav" aria-label="Measurement kinds"></nav>
+      <div id="measure-forms"></div>
+    </div>
+  </main>
+  <div data-layout="footer"></div>
+  <script type="module" src="/js/measurements.js"></script>
+</body>
+</html>

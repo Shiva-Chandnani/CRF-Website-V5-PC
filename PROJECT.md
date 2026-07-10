@@ -2,7 +2,9 @@
 
 Single source of truth for a new chat session to pick up where the previous one left off. Pair this with [CLAUDE.md](CLAUDE.md) (frontend rules) for full context.
 
-> **Last session ended** at: **💳 PHASE 2 — Stripe full checkout SHIPPED on branch `phase-2/stripe-checkout`** (2026-07-09). A signed-in customer can now pay the full garment amount via Stripe Checkout (hosted, redirect): `orders` + `payments` rows are created server-side by Supabase Edge Functions (Deno), confirmed by a registered Stripe test-mode webhook. The trust boundary re-resolves all prices from `v_products` before creating the Stripe session — the client-written `carts.items` price is never used. Full regression (orders RLS, price resolution, webhook idempotency, puppeteer guest→Stripe flow, GOLD-STANDARD 4242 test-card purchase) and 13-page CSP sweep all green. **Last remaining Phase 2 sub-project: measurements-capture UX** (wire the `account.html` measurement stubs to `js/profile.js`'s `getLatestMeasurements`/`saveMeasurements`). ⚠️ Pre-launch reminders: re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + custom SMTP; **activate Stripe account** (Thai bank + identity → live keys) and register a LIVE webhook endpoint pointing at the deployed `stripe-webhook` function; add order-confirmation email (needs SMTP).
+> **Last session ended** at: **✅ PHASE 2 COMPLETE — measurements-capture UX SHIPPED on branch `phase-2/measurements-capture`** (2026-07-10). This was the last remaining Phase 2 sub-project. A signed-in customer can now self-enter their tailoring measurements on a new `requireAuth`-gated `/measurements.html`, covering all four schema kinds (body + jacket/shirt/pants reference) via a data-driven field schema (`js/measurement-schema.js`) rendered by `js/measurements.js`, prefilled from and saved through the already-shipped `getLatestMeasurements`/`saveMeasurements` in `js/profile.js`. Fixed labelled units (in/cm/kg). Full regression (schema drift guard, e2e save round-trip + append-only, measurements RLS/views, account CRUD, layout-mount, token-discipline) + 14-page CSP sweep all green. **With this, all of Phase 2 (cart dual-mode + Stripe checkout + measurements UX) is shipped — Phase 3 (Discovery + SEO + privacy hardening) is next.** ⚠️ Pre-launch reminders (unchanged, still open): re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + custom SMTP; **activate Stripe account** (Thai bank + identity → live keys) and register a LIVE webhook endpoint pointing at the deployed `stripe-webhook` function; add order-confirmation email (needs SMTP).
+>
+> **Prior sub-project — 💳 Stripe full checkout SHIPPED** (2026-07-09, branch `phase-2/stripe-checkout`). A signed-in customer pays the full garment amount via hosted Stripe Checkout: `orders` + `payments` rows created server-side by Supabase Edge Functions (Deno), confirmed by a registered Stripe test-mode webhook. The trust boundary re-resolves all prices from `v_products` before creating the Stripe session — the client-written `carts.items` price is never used.
 >
 > **Phase 1 recap:** all four worktrees (WT-1 auth foundation, WT-3 measurements schema, WT-4 privacy + CSP, WT-2 auth pages) merged to `main` (2026-07-07). Customers can sign up, sign in, reset passwords, edit their profile, and delete their account.
 >
@@ -17,9 +19,10 @@ Single source of truth for a new chat session to pick up where the previous one 
 >
 > **✅ Image-transformation 403 — RESOLVED 2026-07-06.** Earlier the Supabase `render/image` endpoint returned `403 FeatureNotEnabled`, breaking all product images site-wide (`js/data-loader.js` builds render-endpoint URLs). Owner upgraded to **Supabase Pro + enabled Image Transformation** (Storage → Settings). Verified: render endpoint `200 image/jpeg` (widths 140/200/1400), shop + PDP images render, `scripts/test-swatch-prefers-hero.mjs` green. Full Phase 0 image gate restored.
 >
-> **What's next — Phase 2 (Commerce):** cart dual-mode (1st sub-project) ✅ shipped/merged 2026-07-08. Stripe full checkout (2nd sub-project) ✅ shipped on `phase-2/stripe-checkout` 2026-07-09 — ready to merge. Remaining:
-> 1. **Measurements-capture UX** — wire the `account.html` measurement stubs (and any checkout step) to `js/profile.js`'s already-exported `getLatestMeasurements`/`saveMeasurements`. Schema shipped in Phase 1 WT-3. Largely independent of cart/Stripe. **START HERE.**
-> 2. Pre-launch chores: re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + configure custom SMTP; **activate Stripe account** (Thai bank + identity → live keys) and register a LIVE webhook endpoint pointing at the deployed `stripe-webhook` function; add order-confirmation transactional email; move `frame-ancestors`/clickjacking protection into an HTTP header (Phase 3 CSP hardening).
+> **What's next — Phase 2 (Commerce) is COMPLETE.** All three sub-projects shipped: cart dual-mode (✅ merged 2026-07-08), Stripe full checkout (✅ 2026-07-09), measurements-capture UX (✅ 2026-07-10). **Next up is Phase 3 (Discovery + SEO + privacy hardening).** Still-open pre-launch chores (not blockers for Phase 3):
+> 1. Re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + configure custom SMTP.
+> 2. **Activate Stripe account** (Thai bank + identity → live keys) and register a LIVE webhook endpoint pointing at the deployed `stripe-webhook` function; add order-confirmation transactional email.
+> 3. Move `frame-ancestors`/clickjacking protection into an HTTP header (Phase 3 CSP hardening).
 >
 > **Phase 1 agentic cycle reference:** `superpowers:brainstorming` → `superpowers:writing-plans` → `superpowers:using-git-worktrees` → `superpowers:subagent-driven-development` → `superpowers:verification-before-completion` → `superpowers:requesting-code-review` → `superpowers:finishing-a-development-branch`. Full methodology: `~/.claude/plans/just-to-revamp-the-agile-sundae.md`. Phase 0 retrospective notes live at the end of [§7](#7-open--next-steps) under "Phase 0 — shipped".
 
@@ -46,8 +49,9 @@ A static HTML/CSS/vanilla-JS website for **Country Road Fashions** — a Bangkok
 | `/login.html` | [login.html](login.html) | Sign in (Phase 1 WT-2) — check_email/confirmed/reset status banners; honors `?next=` |
 | `/forgot-password.html` | [forgot-password.html](forgot-password.html) | Constant-time reset request (Phase 1 WT-2) |
 | `/reset-password.html` | [reset-password.html](reset-password.html) | Set new password from recovery link (Phase 1 WT-2) |
-| `/account.html` | [account.html](account.html) | Signed-in account (Phase 1 WT-2) — profile edit + measurement stubs + Orders history section + delete-account modal. `requireAuth` gated |
+| `/account.html` | [account.html](account.html) | Signed-in account (Phase 1 WT-2) — profile edit + measurement links (now enabled → `/measurements.html`) + Orders history section + delete-account modal. `requireAuth` gated |
 | `/order-confirmation.html?order=<uuid>` | [order-confirmation.html](order-confirmation.html) | Post-payment confirmation (Phase 2 Stripe checkout) — `requireAuth`; reads order via owner-RLS; renders the order summary as a brand spec-sheet docket; polls up to ~7.5s to absorb webhook lag |
+| `/measurements.html#{body\|jacket\|shirt\|pants}` | [measurements.html](measurements.html) | Self-entry measurements (Phase 2) — `requireAuth`; left sub-nav for the four kinds; forms rendered from `js/measurement-schema.js` by `js/measurements.js`; prefills from + saves to `js/profile.js`'s `getLatestMeasurements`/`saveMeasurements` (append-only). Fixed labelled units (in/cm/kg) |
 
 Start dev server: `node serve.mjs` (port 3000). Don't start a second instance if already running. **Auth pages + `js/auth.js`/`js/profile.js` require `@supabase/supabase-js` (installed `--no-save`) and load it in the browser from esm.sh.**
 
@@ -141,6 +145,7 @@ Two public buckets:
 ├── privacy.html                  # Phase 1 WT-4 — PDPA notice
 ├── signup.html, login.html, forgot-password.html, reset-password.html, account.html        # Phase 1 WT-2 — auth
 ├── order-confirmation.html       # Phase 2 Stripe — post-payment docket; requireAuth; owner-RLS order read
+├── measurements.html             # Phase 2 — self-entry measurements; requireAuth; sub-nav for 4 kinds; forms rendered by js/measurements.js
 ├── serve.mjs                     # localhost:3000 dev server (vanilla node http)
 ├── screenshot.mjs                # puppeteer screenshot → temporary screenshots/screenshot-N[-label].png (1440×900)
 ├── package.json                  # deps: puppeteer, pg. NOTE: @supabase/supabase-js installed --no-save (not in package.json)
@@ -158,8 +163,10 @@ Two public buckets:
 │   ├── newsletter.js             # Phase 0 — footer form → newsletter_subscribers (sets form.dataset.newsletterBound)
 │   ├── meta.js                   # Phase 0 — setMeta() no-op skeleton (Phase 3 fills it)
 │   ├── auth.js                   # Phase 1 WT-1 — Supabase Auth wrapper (spec §6.1) + header account-link swap; imports supabase from esm.sh (browser-only)
-│   ├── profile.js                # Phase 1 WT-2 — getMyProfile/updateMyProfile + getLatestMeasurements/saveMeasurements (last two: Phase 2 UI). client() lazily imports auth.js
+│   ├── profile.js                # Phase 1 WT-2 — getMyProfile/updateMyProfile + getLatestMeasurements/saveMeasurements (last two wired to UI in Phase 2 measurements). client() lazily imports auth.js
 │   ├── checkout.js               # Phase 2 Stripe — document-level click delegation on [data-checkout-button]; requireAuth bounces guests; flushes localStorage cart to server carts row; invokes create-checkout-session Edge Function; redirects to Stripe
+│   ├── measurement-schema.js     # Phase 2 — SINGLE SOURCE OF TRUTH: 4 kinds × field groups (keys mirror db/09_measurements.sql columns exactly), labels/units/hints + ANCHOR_BY_KIND/KIND_BY_ANCHOR. Node-importable (drift guard)
+│   ├── measurements.js           # Phase 2 — browser-only: renders 4 forms from measurement-schema, requireAuth, lazy prefill via getLatestMeasurements, validate + save via saveMeasurements, hash-based kind switching
 │   └── schema.d.ts               # TypeScript types (IDE only; NOT updated for profiles/measurements — stale)
 │
 ├── assets/customization/svg/     # 65 placeholder line-art SVGs (one per customization option)
@@ -188,7 +195,7 @@ Two public buckets:
 │   │  # ── TEST SUITE (all green on main; run with serve.mjs up from repo root) ──
 │   ├── test-customizer-flow / -design-hero-rail / -swatch-prefers-hero   # Phase 0 catalogue UI
 │   ├── test-layout-mount / -newsletter-submit / -token-discipline        # Phase 0 spine
-│   ├── test-csp-compliance.mjs              # Phase 1 — 13-page CSP zero-violation sweep (extended for order-confirmation.html in Phase 2)
+│   ├── test-csp-compliance.mjs              # Phase 1 — 14-page CSP zero-violation sweep (extended for order-confirmation.html + measurements.html in Phase 2)
 │   ├── test-auth-* / test-profile-rls / test-trigger-newsletter-backfill / test-delete-rpc   # WT-1 auth
 │   ├── test-measurements-{rls,views,cascade}.mjs                         # WT-3 measurements
 │   ├── test-privacy-page.mjs                # WT-4 privacy
@@ -198,7 +205,9 @@ Two public buckets:
 │   ├── test-checkout-price-resolution.mjs  # Phase 2 Stripe — server re-prices items, ignores tampered client price; auth + empty-cart guards
 │   ├── test-webhook-handler.mjs         # Phase 2 Stripe — paid + payment row + cart clear on completed; idempotent replay; expired → canceled
 │   ├── test-checkout-flow.mjs           # Phase 2 Stripe — puppeteer: guest→login redirect, signed-in→Stripe redirect
-│   └── test-checkout-purchase-e2e.mjs   # Phase 2 Stripe — GOLD-STANDARD: real 4242 test-card purchase → registered webhook → order paid (manual/e2e; not offline CI)
+│   ├── test-checkout-purchase-e2e.mjs   # Phase 2 Stripe — GOLD-STANDARD: real 4242 test-card purchase → registered webhook → order paid (manual/e2e; not offline CI)
+│   ├── test-measurement-schema.mjs      # Phase 2 measurements — pure-Node drift guard: MEASUREMENT_SCHEMA keys ⇔ db/09_measurements.sql numeric columns (both directions)
+│   └── test-measurements-page.mjs       # Phase 2 measurements — puppeteer e2e: guest bounce, prefill round-trip, sub-nav switch, append-only, partial save
 │      # NOTE: test scripts read .env.local manually (no dotenv). Auth tests use admin createUser (bypasses email blocklist).
 │
 ├── supabase/
@@ -325,7 +334,7 @@ A **phase** is a sequence of these units. Phase ends when all its features are m
 | 3 | Site-wide search (header) | 3 | ⬜ |
 | 4 | Shop page filters + search | 3 | ⬜ (basic input exists in shop.html) |
 | 5 | Customer login + profile (email/password + Google) | 1 | ✅ done — Phase 1 complete (merged 2026-07-07). Email/password auth + profiles + measurements schema + auth pages + privacy page. Google OAuth deferred. |
-| 6 | Measurements capture | 1 (schema) + 2 (UX) | 🔶 schema ✅ done (Phase 1 WT-3); UX ⬜ **NEXT Phase 2** |
+| 6 | Measurements capture | 1 (schema) + 2 (UX) | ✅ done — schema (Phase 1 WT-3) + self-entry UX (`/measurements.html`, shipped 2026-07-10) |
 | 7 | Stripe checkout + payment page | 2 | ✅ done — full Stripe hosted checkout shipped 2026-07-09 (branch `phase-2/stripe-checkout`). Orders + payments + webhook + order-confirmation page. Pre-launch: activate account (Thai bank + identity → live keys) + register live webhook endpoint + order-confirmation email. |
 | 8 | Admin dashboard (analytics + customers) | 5 | ⬜ |
 | 9 | CRM sync | 5 | ⬜ |
@@ -354,7 +363,7 @@ A **phase** is a sequence of these units. Phase ends when all its features are m
 |---|---|---|---|
 | **0 — Foundation Refactor** | One shared spine for every page | Shared header/footer, `css/base.css`, normalized `.btn` system, meta scaffold, newsletter capture table + footer-form wiring (item 13 capture half) | **✅ shipped 2026-05-31** (commit `623c9c3`). Retrospective notes in the "Phase 0 — shipped" subsection below. |
 | **1 — Identity & Personal Data** | Customers exist; we capture them | 5, 6 (schema), 14 (privacy page draft + CSP baseline) | **✅ shipped 2026-07-07** (all 4 worktrees merged to main). |
-| 2 — Commerce | Real cart + paid orders | 2 (cart dual-mode ✅ merged 2026-07-08), 7 (Stripe checkout ✅ shipped 2026-07-09), 6 (measurements UX ⬜ **NEXT**) | Depends on Phase 1. Cart dual-mode + Stripe checkout done; only measurements-capture UX remains. |
+| 2 — Commerce | Real cart + paid orders | 2 (cart dual-mode ✅ merged 2026-07-08), 7 (Stripe checkout ✅ shipped 2026-07-09), 6 (measurements UX ✅ shipped 2026-07-10) | **✅ COMPLETE.** All three sub-projects shipped. |
 | 3 — Discovery + SEO + Privacy hardening | Findability + production-ready security | 3, 4, 11, 14 (CSP tighten + RLS audit) | Many parallel streams. |
 | 4 — Customization expansion | Jacket + Trouser drawers | 1 (extend) | Half session. Schema already supports it (see §10). |
 | 5 — Operations | Admin + CRM | 8, 9 | Needs real data flowing. |
@@ -564,6 +573,17 @@ Shared spine landed. Every existing page now mounts `components/header.html` + `
   cart-rls, cart-dual-mode, customizer-flow, layout-mount, newsletter-submit,
   token-discipline) + 12-page CSP sweep all green.
 - **Out of scope / next (at the time of cart dual-mode merge):** Stripe full checkout (orders / payments / webhook) — shipped in the next sub-project (see below). Measurements-capture UX still pending.
+
+### Phase 2 — measurements-capture UX (SHIPPED 2026-07-10) — Phase 2 close
+
+Self-entry measurements — a signed-in customer types their own tailoring measurements on a new `requireAuth`-gated `/measurements.html`, covering all four schema kinds (body + jacket/shirt/pants reference). UI + wiring only; no DB/schema change (the Phase 1 WT-3 schema + `js/profile.js` data layer were reused unchanged).
+
+- **`js/measurement-schema.js`** — the single source of truth. Exports `MEASUREMENT_SCHEMA` (4 kinds, each with field groups of `{ key, label, unit, hint }`; every `key` matches a `numeric(5,2)` column in `db/09_measurements.sql` EXACTLY), plus `fieldKeysForKind()` and the `ANCHOR_BY_KIND`/`KIND_BY_ANCHOR` hash maps (`body|jacket|shirt|pants`). No browser-only imports → Node-importable for the drift guard. Body = 21 fields in 3 groups (Jacket & Coat / Trousers / Height & Weight); jacket ref = 15, shirt ref = 10, pants ref = 8; each has a free-text `notes`.
+- **`js/measurements.js`** — browser-only render module. `requireAuth` (bounces guests to `/login.html?next=/measurements.html`), builds all four `<form>`s from the schema, lazily prefills the active kind via `getLatestMeasurements(kind)`, validates lightly (`0–999.99`, blank always valid — partial saves are a feature), and saves via `saveMeasurements(kind, fields)` (append-only — every save INSERTs a fresh snapshot; latest wins on the `v_latest_*` views). Hash-driven kind switching + `aria-current`. Sets `document.body.dataset.measurementsReady` as a readiness hook. Guards reentrant submit (Enter mid-save) and the `requireAuth` null return (both from code review).
+- **`measurements.html`** — dedicated page modelled on `account.html`: same `<head>` CSP block, fonts, `data-layout` header/footer slots; two-column sticky left sub-nav + content; serif "Your *Measurements*" header with the italic stone-underline accent; fixed labelled units (in/cm/kg) shown as an in-input suffix; responsive collapse at ≤900px (sub-nav → horizontal row).
+- **Wiring:** the two disabled `account.html` measurement stubs are now enabled `<a>` links → `/measurements.html#body` and `#jacket`. **Footer left unchanged** — its "Online Measurements" link points at `book-appointment.html#online` (an *online consultation*, a distinct concept from self-entry).
+- **Units:** fixed + labelled (spec decision); no in/cm toggle. Toggle, a measurement-history browser, per-field diagrams, and PDP/checkout inline capture were all explicitly deferred.
+- **Tests (all green):** `test-measurement-schema` (pure-Node drift guard — every schema key ⇔ SQL numeric column, both directions; 109 assertions), `test-measurements-page` (puppeteer e2e — guest bounce, render, empty state, partial save round-trip through the view, sub-nav switch, append-only = 2 rows after 2 saves). CSP sweep extended to **14 pages**. Full regression (+ measurements RLS/views, account CRUD, layout-mount, token-discipline) green.
 
 ### Phase 2 — Stripe full checkout (SHIPPED 2026-07-09)
 
