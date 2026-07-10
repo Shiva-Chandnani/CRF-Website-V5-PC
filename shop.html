@@ -523,7 +523,7 @@
 
 <script type="module">
   import {
-    getCategories, getSubcategoriesFor, fabricImageUrl, productImageUrl, searchProducts, supabase
+    getCategories, getSubcategoriesFor, fabricImageUrl, productImageUrl, searchProducts, productSearch, supabase
   } from './js/data-loader.js';
 
   // ---------- Item-kind singularised label (for "The Cavani Wool ___") ----------
@@ -560,7 +560,7 @@
     pattern:       params.get('pattern')     || null,
     color:         params.get('color')       || null,
     sort:          'recommended',
-    query:         '',
+    query:         params.get('q') || '',
     products:      [],
     categories:    [],
   };
@@ -606,11 +606,19 @@
     await loadProducts();
     renderAll();
 
+    // Reflect any ?q= into the search box
+    $('#searchInput').value = state.query;
+
     // Wire interactions
     $('#sortSelect').addEventListener('change', (e) => { state.sort = e.target.value; renderGrid(); });
+    let searchTimer = null;
     $('#searchInput').addEventListener('input', (e) => {
-      state.query = e.target.value.trim().toLowerCase();
-      renderGrid();
+      state.query = e.target.value.trim();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(async () => {
+        await loadProducts();
+        renderAll();
+      }, 250);
     });
     $('#filterToggle').addEventListener('click', () => {
       const layout = $('#shopLayout');
@@ -623,13 +631,15 @@
 
   async function loadProducts() {
     const filters = {
-      categoryId:    state.categoryId    || undefined,
-      subcategoryId: state.subcategoryId || undefined,
-      fabricTypeId:  state.fabricTypeId  || undefined,
-      pattern:       state.pattern       || undefined,
-      color:         state.color         || undefined,
+      categoryId:    state.categoryId    || null,
+      subcategoryId: state.subcategoryId || null,
+      fabricTypeId:  state.fabricTypeId  || null,
+      pattern:       state.pattern       || null,
+      color:         state.color         || null,
     };
-    state.products = await searchProducts(filters);
+    // productSearch: server-ranked when a query is present; falls back to the
+    // filter-only path (searchProducts) when the query is blank.
+    state.products = await productSearch(state.query, filters);
   }
 
   function renderAll() {
@@ -752,28 +762,18 @@
       case 'price-asc':  arr.sort((a, b) => a.price - b.price); break;
       case 'price-desc': arr.sort((a, b) => b.price - a.price); break;
       case 'name':       arr.sort((a, b) => a.design_name.localeCompare(b.design_name)); break;
-      default: arr.sort((a, b) =>
-        (a.item_type_id.localeCompare(b.item_type_id)) ||
-        (a.fabric_number.localeCompare(b.fabric_number))
-      );
+      case 'recommended':
+      default:
+        break; // preserve server order (relevance for queries)
     }
     return arr;
   }
 
   function renderGrid() {
     const grid = $('#productGrid');
-    const q = state.query;
-    let list = state.products;
-    if (q) {
-      list = list.filter(p =>
-        p.design_name.toLowerCase().includes(q)        ||
-        p.fabric_type_name.toLowerCase().includes(q)   ||
-        p.fabric_number.toLowerCase().includes(q)      ||
-        p.item_type_name.toLowerCase().includes(q)     ||
-        (p.color || []).some(c => c.toLowerCase().includes(q))
-      );
-    }
-    list = sortProducts(list);
+    // state.products is already the server-side (ranked) result set for the
+    // current query + filters — no client-side substring filtering here.
+    let list = sortProducts(state.products);
 
     // Group into cards
     const groups = groupForCards(list);
