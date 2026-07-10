@@ -565,6 +565,12 @@
     categories:    [],
   };
 
+  // Generation counter: a superseded async load never assigns/renders (guards
+  // the stale-response race between text search, filter, and sort reloads).
+  let loadSeq = 0;
+  // Hoisted so a filter/sort reload can cancel a queued keystroke debounce.
+  let searchTimer = null;
+
   // ---------- Helpers ----------
   const $  = (sel) => document.querySelector(sel);
   const fmtTHB = (n) => 'THB ' + n.toLocaleString('en-US');
@@ -603,21 +609,18 @@
     wireSwatchInteractions();
 
     // Fetch products with current filters
-    await loadProducts();
-    renderAll();
+    if (await loadProducts()) renderAll();
 
     // Reflect any ?q= into the search box
     $('#searchInput').value = state.query;
 
     // Wire interactions
     $('#sortSelect').addEventListener('change', (e) => { state.sort = e.target.value; renderGrid(); });
-    let searchTimer = null;
     $('#searchInput').addEventListener('input', (e) => {
       state.query = e.target.value.trim();
       clearTimeout(searchTimer);
       searchTimer = setTimeout(async () => {
-        await loadProducts();
-        renderAll();
+        if (await loadProducts()) renderAll();
       }, 250);
     });
     $('#filterToggle').addEventListener('click', () => {
@@ -630,6 +633,7 @@
   }
 
   async function loadProducts() {
+    const mySeq = ++loadSeq;
     const filters = {
       categoryId:    state.categoryId    || null,
       subcategoryId: state.subcategoryId || null,
@@ -639,7 +643,10 @@
     };
     // productSearch: server-ranked when a query is present; falls back to the
     // filter-only path (searchProducts) when the query is blank.
-    state.products = await productSearch(state.query, filters);
+    const rows = await productSearch(state.query, filters);
+    if (mySeq !== loadSeq) return false;   // a newer load superseded this one
+    state.products = rows;
+    return true;
   }
 
   function renderAll() {
@@ -745,15 +752,18 @@
   }
 
   async function refresh() {
+    // Cancel any queued keystroke-triggered reload so it can't land stale
+    // after this filter/sort-driven reload.
+    clearTimeout(searchTimer);
     $('#productCount').textContent = 'Loading…';
-    await loadProducts();
+    const won = await loadProducts();
     // re-evaluate page title if category changed
     const cat = state.categories.find(c => c.id === state.categoryId);
     const t = pageTitleFor(cat);
     $('#shop-title').innerHTML = state.categoryId ? 'The ' + t.title + ' Collection' : 'The <em>Bespoke</em> Collection';
     $('#shop-tagline').textContent = t.tagline;
     $('#crumb-leaf').textContent = t.leaf;
-    renderAll();
+    if (won) renderAll();
   }
 
   function sortProducts(list) {
