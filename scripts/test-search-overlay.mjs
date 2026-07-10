@@ -42,6 +42,34 @@ try {
   await page.waitForFunction(() => document.querySelector('#search-overlay')?.getAttribute('data-open') !== '1');
   const backToTrigger = await page.evaluate(() => document.activeElement?.hasAttribute('data-search-btn'));
   must(backToTrigger, 'Esc closes overlay and returns focus to trigger');
+
+  // 6b. Closed overlay is removed from layout + tab order (after the fade-out)
+  await page.waitForFunction(() => document.querySelector('#search-overlay')?.hidden === true);
+  const closedDisplay = await page.evaluate(() =>
+    getComputedStyle(document.querySelector('#search-overlay')).display);
+  must(closedDisplay === 'none', `closed overlay display:none (got ${closedDisplay})`);
+
+  // 7. XSS-safety: injection payload in a no-match query must not execute
+  await page.evaluate(() => { window.__xss = false; });
+  await page.click('[data-search-btn]');
+  await page.waitForSelector('#search-overlay[data-open="1"]', { visible: true });
+  await page.click('[data-search-input]', { clickCount: 3 });
+  await page.type('[data-search-input]', 'zzqxvbwkq<img src=x onerror="window.__xss=true">');
+  await new Promise(r => setTimeout(r, 600));
+  const xss = await page.evaluate(() => window.__xss === true);
+  must(!xss, 'injection payload in query does not execute (no XSS)');
+
+  // 8. Keyboard: ArrowDown activates a result option (combobox pattern)
+  await page.click('[data-search-input]', { clickCount: 3 });
+  await page.type('[data-search-input]', 'wool');
+  await page.waitForSelector('#search-overlay [role="option"]');
+  await page.keyboard.press('ArrowDown');
+  const active = await page.evaluate(() => {
+    const inp = document.querySelector('[data-search-input]');
+    const ad = inp.getAttribute('aria-activedescendant');
+    return !!ad && !!document.getElementById(ad)?.classList.contains('is-active');
+  });
+  must(active, 'ArrowDown activates a result option via aria-activedescendant');
 } catch (e) {
   must(false, 'unexpected exception: ' + e.message);
 } finally {

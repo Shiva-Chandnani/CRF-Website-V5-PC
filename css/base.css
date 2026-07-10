@@ -453,6 +453,8 @@ input.input::placeholder { color: var(--color-muted); }
   transition: opacity .18s cubic-bezier(.2,.8,.2,1);
 }
 #search-overlay[data-open="1"] { opacity: 1; pointer-events: auto; }
+/* [hidden] must win over the display:flex above so a closed overlay leaves the tab order */
+#search-overlay[hidden] { display: none; }
 .search-overlay__backdrop {
   position: absolute; inset: 0;
   background: color-mix(in srgb, var(--color-jet) 55%, transparent);
@@ -488,7 +490,8 @@ input.input::placeholder { color: var(--color-muted); }
   transition: background-color .15s ease, transform .15s cubic-bezier(.2,.8,.2,1);
 }
 .search-overlay__result:hover,
-.search-overlay__result:focus-visible {
+.search-overlay__result:focus-visible,
+.search-overlay__result.is-active {
   background: color-mix(in srgb, var(--color-stone) 22%, transparent);
   transform: translateX(2px); outline: none;
 }
