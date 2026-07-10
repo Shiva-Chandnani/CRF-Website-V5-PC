@@ -774,7 +774,11 @@
       case 'name':       arr.sort((a, b) => a.design_name.localeCompare(b.design_name)); break;
       case 'recommended':
       default:
-        break; // preserve server order (relevance for queries)
+        if (state.query) break; // active query → keep server relevance order
+        arr.sort((a, b) =>
+          (a.item_type_id.localeCompare(b.item_type_id)) ||
+          (a.fabric_number.localeCompare(b.fabric_number))
+        );
     }
     return arr;
   }

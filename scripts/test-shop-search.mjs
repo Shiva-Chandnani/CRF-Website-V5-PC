@@ -36,6 +36,23 @@ try {
   await new Promise(r => setTimeout(r, 600));
   const restored = await countCards(page);
   must(restored === allCards, `clearing query restores browse (${restored} === ${allCards})`);
+
+  // 5. Combined query + sidebar filter ANDs at the shop layer
+  await page.goto('http://localhost:3000/shop.html?q=wool', { waitUntil: 'networkidle0' });
+  await page.waitForSelector('#productGrid .product-card', { timeout: 5000 });
+  const qOnly = await countCards(page);
+  // Click the first real fabric-house filter option (not an "All" reset).
+  const clicked = await page.evaluate(() => {
+    const els = [...document.querySelectorAll('#fabricList .filter-link')];
+    const opt = els.find(e => !/all/i.test(e.textContent || ''));
+    if (opt) { opt.click(); return true; }
+    return false;
+  });
+  must(clicked, 'found a fabric filter to click');
+  await new Promise(r => setTimeout(r, 700));
+  await page.waitForSelector('#productGrid .product-card, #productGrid .grid-msg', { timeout: 5000 });
+  const combined = await countCards(page);
+  must(combined > 0 && combined <= qOnly, `query+filter ANDs to a subset (${combined} ≤ ${qOnly})`);
 } catch (e) {
   must(false, 'unexpected exception: ' + e.message);
 } finally {
