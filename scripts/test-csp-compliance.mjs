@@ -23,6 +23,7 @@ const PAGES = [
   '/reset-password.html',
   '/account.html',
   '/order-confirmation.html',
+  '/measurements.html',
 ];
 
 function isCspViolation(text) {
