@@ -16,7 +16,20 @@
   object-src 'none';
 ">
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Shop — Country Road Fashions</title>
+<title>The Bespoke Collection — Country Road Fashions</title>
+<meta name="description" content="Browse made-to-measure suits, jackets and trousers in premium wool. Hand-finished in our Bangkok atelier, cut to your measurements." />
+<link rel="canonical" href="https://countryroadfashions.com/shop.html" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Country Road Fashions" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:title" content="The Bespoke Collection — Country Road Fashions" />
+<meta property="og:description" content="Browse made-to-measure suits, jackets and trousers in premium wool. Hand-finished in our Bangkok atelier, cut to your measurements." />
+<meta property="og:url" content="https://countryroadfashions.com/shop.html" />
+<meta property="og:image" content="https://fzgsogdceptjvuahukbn.supabase.co/storage/v1/render/image/public/crf-products/hero/formal-suit-2-piece__vbc-wool/01.png?width=1200" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="The Bespoke Collection — Country Road Fashions" />
+<meta name="twitter:description" content="Browse made-to-measure suits, jackets and trousers in premium wool. Hand-finished in our Bangkok atelier, cut to your measurements." />
+<meta name="twitter:image" content="https://fzgsogdceptjvuahukbn.supabase.co/storage/v1/render/image/public/crf-products/hero/formal-suit-2-piece__vbc-wool/01.png?width=1200" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Raleway:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -525,6 +538,7 @@
   import {
     getCategories, getSubcategoriesFor, fabricImageUrl, productImageUrl, searchProducts, productSearch, supabase
   } from './js/data-loader.js';
+  import { setMeta, canonicalFor, SITE_ORIGIN } from './js/meta.js';
 
   // ---------- Item-kind singularised label (for "The Cavani Wool ___") ----------
   const ITEM_KIND = {
@@ -590,6 +604,36 @@
     return { ...m, leaf: category.name };
   }
 
+  function applyShopMeta() {
+    const cat = state.categories.find(c => c.id === state.categoryId);
+    const label = cat ? cat.name : 'The Bespoke Collection';
+    let title, description, canonical;
+    if (state.query) {
+      title = `Search: ${state.query} — Country Road Fashions`;
+      description = `Search results for "${state.query}" across the Country Road Fashions bespoke collection.`;
+      canonical = canonicalFor('/shop.html'); // search pages consolidate to the base
+    } else {
+      title = `${label} — Country Road Fashions`;
+      description = cat
+        ? `Made-to-measure ${cat.name.toLowerCase()} in premium wool, hand-finished in our Bangkok atelier.`
+        : 'Browse made-to-measure suits, jackets and trousers in premium wool. Hand-finished in our Bangkok atelier, cut to your measurements.';
+      canonical = canonicalFor('/shop.html' + (state.categoryId ? `?category=${encodeURIComponent(state.categoryId)}` : ''));
+    }
+    const crumbs = [
+      { '@type': 'ListItem', position: 1, name: 'House', item: SITE_ORIGIN + '/' },
+      { '@type': 'ListItem', position: 2, name: 'Shop', item: SITE_ORIGIN + '/shop.html' },
+    ];
+    if (cat && !state.query) {
+      crumbs.push({ '@type': 'ListItem', position: 3, name: cat.name, item: canonical });
+    }
+    const breadcrumbLd = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: crumbs,
+    };
+    setMeta({ title, description, canonical, jsonLd: breadcrumbLd });
+  }
+
   // ---------- Load + render ----------
   async function init() {
     state.categories = await getCategories();
@@ -614,6 +658,8 @@
     // Reflect any ?q= into the search box
     $('#searchInput').value = state.query;
 
+    applyShopMeta();
+
     // Wire interactions
     $('#sortSelect').addEventListener('change', (e) => { state.sort = e.target.value; renderGrid(); });
     $('#searchInput').addEventListener('input', (e) => {
@@ -621,6 +667,7 @@
       clearTimeout(searchTimer);
       searchTimer = setTimeout(async () => {
         if (await loadProducts()) renderAll();
+        applyShopMeta();
       }, 250);
     });
     $('#filterToggle').addEventListener('click', () => {
@@ -763,6 +810,7 @@
     $('#shop-title').innerHTML = state.categoryId ? 'The ' + t.title + ' Collection' : 'The <em>Bespoke</em> Collection';
     $('#shop-tagline').textContent = t.tagline;
     $('#crumb-leaf').textContent = t.leaf;
+    applyShopMeta();
     if (won) renderAll();
   }
 

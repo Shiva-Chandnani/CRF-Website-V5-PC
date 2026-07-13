@@ -56,39 +56,34 @@ export function canonicalFor(pathAndQuery) {
   return SITE_ORIGIN + (pathAndQuery.startsWith('/') ? pathAndQuery : '/' + pathAndQuery);
 }
 
-function upsertMetaByName(name, content) {
+// Upsert a <meta> tag by its identifying attribute (`name` or `property`).
+// Adopts an existing hardcoded tag if present (updates in place + stamps the
+// data-meta marker) so a static page's baked-in tags are never duplicated;
+// otherwise creates a fresh managed tag. The marker keeps later calls idempotent.
+function upsertMeta(attr, key, content) {
   if (content == null) return;
-  let el = document.head.querySelector(`meta[name="${name}"][data-meta]`);
+  let el = document.head.querySelector(`meta[${attr}="${key}"]`);
   if (!el) {
     el = document.createElement('meta');
-    el.setAttribute('name', name);
-    el.setAttribute('data-meta', '');
+    el.setAttribute(attr, key);
     document.head.appendChild(el);
   }
+  el.setAttribute('data-meta', '');
   el.setAttribute('content', content);
 }
 
-function upsertMetaByProperty(property, content) {
-  if (content == null) return;
-  let el = document.head.querySelector(`meta[property="${property}"][data-meta]`);
-  if (!el) {
-    el = document.createElement('meta');
-    el.setAttribute('property', property);
-    el.setAttribute('data-meta', '');
-    document.head.appendChild(el);
-  }
-  el.setAttribute('content', content);
-}
+const upsertMetaByName = (name, content) => upsertMeta('name', name, content);
+const upsertMetaByProperty = (property, content) => upsertMeta('property', property, content);
 
 function upsertCanonical(href) {
   if (href == null) return;
-  let el = document.head.querySelector('link[rel="canonical"][data-meta]');
+  let el = document.head.querySelector('link[rel="canonical"]');
   if (!el) {
     el = document.createElement('link');
     el.setAttribute('rel', 'canonical');
-    el.setAttribute('data-meta', '');
     document.head.appendChild(el);
   }
+  el.setAttribute('data-meta', '');
   el.setAttribute('href', href);
 }
 
