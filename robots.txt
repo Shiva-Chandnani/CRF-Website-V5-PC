@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /account.html
+Disallow: /cart.html
+Disallow: /login.html
+Disallow: /signup.html
+Disallow: /forgot-password.html
+Disallow: /reset-password.html
+Disallow: /measurements.html
+Disallow: /order-confirmation.html
+
+Sitemap: https://countryroadfashions.com/sitemap.xml
