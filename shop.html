@@ -538,6 +538,7 @@
   import {
     getCategories, getSubcategoriesFor, fabricImageUrl, productImageUrl, searchProducts, productSearch, supabase
   } from './js/data-loader.js';
+  import { setMeta, canonicalFor, SITE_ORIGIN } from './js/meta.js';
 
   // ---------- Item-kind singularised label (for "The Cavani Wool ___") ----------
   const ITEM_KIND = {
@@ -603,6 +604,32 @@
     return { ...m, leaf: category.name };
   }
 
+  function applyShopMeta() {
+    const cat = state.categories.find(c => c.id === state.categoryId);
+    const label = cat ? cat.name : 'The Bespoke Collection';
+    let title, description, canonical;
+    if (state.query) {
+      title = `Search: ${state.query} — Country Road Fashions`;
+      description = `Search results for "${state.query}" across the Country Road Fashions bespoke collection.`;
+      canonical = canonicalFor('/shop.html'); // search pages consolidate to the base
+    } else {
+      title = `${label} — Country Road Fashions`;
+      description = cat
+        ? `Made-to-measure ${cat.name.toLowerCase()} in premium wool, hand-finished in our Bangkok atelier.`
+        : 'Browse made-to-measure suits, jackets and trousers in premium wool. Hand-finished in our Bangkok atelier, cut to your measurements.';
+      canonical = canonicalFor('/shop.html' + (state.categoryId ? `?category=${encodeURIComponent(state.categoryId)}` : ''));
+    }
+    const breadcrumbLd = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'House', item: SITE_ORIGIN + '/' },
+        { '@type': 'ListItem', position: 2, name: 'Shop', item: SITE_ORIGIN + '/shop.html' },
+      ],
+    };
+    setMeta({ title, description, canonical, jsonLd: breadcrumbLd });
+  }
+
   // ---------- Load + render ----------
   async function init() {
     state.categories = await getCategories();
@@ -626,6 +653,8 @@
 
     // Reflect any ?q= into the search box
     $('#searchInput').value = state.query;
+
+    applyShopMeta();
 
     // Wire interactions
     $('#sortSelect').addEventListener('change', (e) => { state.sort = e.target.value; renderGrid(); });
@@ -776,6 +805,7 @@
     $('#shop-title').innerHTML = state.categoryId ? 'The ' + t.title + ' Collection' : 'The <em>Bespoke</em> Collection';
     $('#shop-tagline').textContent = t.tagline;
     $('#crumb-leaf').textContent = t.leaf;
+    applyShopMeta();
     if (won) renderAll();
   }
 

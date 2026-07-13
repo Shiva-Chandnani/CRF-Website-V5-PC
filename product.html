@@ -785,6 +785,7 @@
 
 <script type="module">
   import { fabricImageUrl, productImageUrl, supabase } from './js/data-loader.js';
+  import { setMeta, canonicalFor, SITE_ORIGIN } from './js/meta.js';
 
   const ITEM_KIND = {
     'suits': 'Suit',
@@ -860,6 +861,48 @@
     document.getElementById('productPrice').textContent = fmtTHB(current.price);
     document.getElementById('designLabelRight').textContent = current.design_name;
     document.title = `${current.fabric_brand} ${current.fabric_family} ${kind} — Country Road Fashions`;
+  }
+
+  function applyPdpMeta(current) {
+    const kind = ITEM_KIND[current.category_id] || current.item_type_name;
+    const name = `The ${current.fabric_brand} ${current.fabric_family} ${kind}`;
+    const title = `${name} — Country Road Fashions`;
+    const description =
+      `${name} — a bespoke ${current.item_type_name.toLowerCase()} in ${current.fabric_brand} ` +
+      `${current.fabric_family}, cut to your measurements and hand-finished in our Bangkok atelier. ` +
+      `From ${fmtTHB(current.price)}.`;
+    // Canonical is design-stripped: consolidate all design variants onto item x fabric.
+    const canonical = canonicalFor(`/product.html?item=${encodeURIComponent(itemTypeId)}&fabric=${encodeURIComponent(fabricTypeId)}`);
+    const heroPath = (current.design_hero_paths && current.design_hero_paths[0]) || current.primary_photo_path;
+    const ogImage = fabricImageUrl(heroPath, { width: 1200 }) || undefined;
+
+    const productLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name,
+      description,
+      image: ogImage,
+      sku: `${itemTypeId}__${fabricTypeId}`,
+      brand: { '@type': 'Brand', name: `${current.fabric_brand} ${current.fabric_family}` },
+      offers: {
+        '@type': 'Offer',
+        price: String(current.price),
+        priceCurrency: 'THB',
+        availability: 'https://schema.org/InStock',
+        url: canonical,
+      },
+    };
+    const breadcrumbLd = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'House', item: SITE_ORIGIN + '/' },
+        { '@type': 'ListItem', position: 2, name: 'Shop', item: SITE_ORIGIN + '/shop.html' },
+        { '@type': 'ListItem', position: 3, name: current.item_type_name, item: canonical },
+      ],
+    };
+
+    setMeta({ title, description, canonical, ogImage, ogType: 'product', jsonLd: [productLd, breadcrumbLd] });
   }
 
   function renderMainImage(d) {
@@ -1049,6 +1092,7 @@
       renderSwatches(state.rows, state.current);
       renderSizeSelectors(state.current.item_type_name);
       renderAccordion(state.current, state.fabric, state.separates);
+      applyPdpMeta(state.current);
       window.dispatchEvent(new CustomEvent('crf:pdp-ready'));
 
       // Wire interactions
