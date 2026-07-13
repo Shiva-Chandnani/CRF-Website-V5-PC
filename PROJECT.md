@@ -2,7 +2,9 @@
 
 Single source of truth for a new chat session to pick up where the previous one left off. Pair this with [CLAUDE.md](CLAUDE.md) (frontend rules) for full context.
 
-> **Last session ended** at: **✅ PHASE 3 IN PROGRESS — PRODUCT SEARCH SHIPPED on branch `phase-3/product-search`** (2026-07-10). Ranked, typo-tolerant product search across the site: a `search_products` Postgres RPC (tsvector prefix + `pg_trgm` fuzzy over `v_products`, in `db/12_product_search.sql`), a site-wide header **typeahead overlay** (`js/search-overlay.js`, mounted on all 14 pages, accessible combobox — XSS-safe, keyboard-navigable), and `shop.html` **server-side combined search + filters** with a `?q=` handoff from the overlay. Backlog items **#3 + #4 done**. Full search suite (product-search RPC 8 cases, search-overlay e2e 9 cases incl. XSS + a11y, shop-search e2e) + 14-page CSP sweep + core regression (layout-mount, token-discipline, swatch, customizer, hero-rail, header-swap, newsletter) all green. See the "Phase 3 — product search (SHIPPED)" subsection under §7. **Remaining Phase 3: #11 SEO baseline + #14 CSP/RLS hardening.** ⚠️ Pre-launch reminders (unchanged): re-enable Supabase email confirmation + SMTP; activate Stripe account + LIVE webhook; order-confirmation email.
+> **Last session ended** at: **✅ PHASE 3 IN PROGRESS — SEO BASELINE SHIPPED on branch `phase-3/seo-baseline`** (2026-07-13, backlog #11). Hybrid SEO baseline: `js/meta.js` is now a real `setMeta()` tag-upsert (title/description/canonical/OG/Twitter + JSON-LD; **adopts** existing hardcoded tags in place so no duplicates). The 5 static indexable pages (index, shop, book-appointment, in-store, privacy) carry **hardcoded** meta+OG+canonical in raw HTML (crawler/social-scraper robust with no JS); index emits `ClothingStore` + `WebSite`/`SearchAction` JSON-LD, in-store emits `ClothingStore`. Dynamic pages call `setMeta()` after data loads: **PDP** emits `Product` + `BreadcrumbList` with a **design-stripped canonical** (35 variants → 6 canonical item×fabric PDPs); **shop** emits search-/category-aware title + `BreadcrumbList`. New `robots.txt` (Disallows 8 private pages + Sitemap line) + generated `sitemap.xml` (5 static + 6 canonical product URLs) via `scripts/generate-sitemap.mjs`; footer Sitemap link repointed. `noindex` on 8 private pages. Tests: `scripts/test-seo-meta.mjs` (44 checks) + 14-page CSP sweep + core regression (layout-mount, token-discipline, product-search, search-overlay, shop-search) all green. **Remaining Phase 3: #14 CSP/RLS hardening only.** ⚠️ Pre-launch reminders (unchanged): re-enable Supabase email confirmation + SMTP; activate Stripe account + LIVE webhook; order-confirmation email; **regenerate `sitemap.xml` when the catalogue changes.**
+>
+> **Prior — ✅ PHASE 3 PRODUCT SEARCH SHIPPED on branch `phase-3/product-search`** (2026-07-10). Ranked, typo-tolerant product search across the site: a `search_products` Postgres RPC (tsvector prefix + `pg_trgm` fuzzy over `v_products`, in `db/12_product_search.sql`), a site-wide header **typeahead overlay** (`js/search-overlay.js`, mounted on all 14 pages, accessible combobox — XSS-safe, keyboard-navigable), and `shop.html` **server-side combined search + filters** with a `?q=` handoff from the overlay. Backlog items **#3 + #4 done**. See the "Phase 3 — product search (SHIPPED)" subsection under §7.
 >
 > **Prior — ✅ PHASE 2 COMPLETE — measurements-capture UX SHIPPED on branch `phase-2/measurements-capture`** (2026-07-10). This was the last remaining Phase 2 sub-project. A signed-in customer can now self-enter their tailoring measurements on a new `requireAuth`-gated `/measurements.html`, covering all four schema kinds (body + jacket/shirt/pants reference) via a data-driven field schema (`js/measurement-schema.js`) rendered by `js/measurements.js`, prefilled from and saved through the already-shipped `getLatestMeasurements`/`saveMeasurements` in `js/profile.js`. Fixed labelled units (in/cm/kg). Full regression (schema drift guard, e2e save round-trip + append-only, measurements RLS/views, account CRUD, layout-mount, token-discipline) + 14-page CSP sweep all green. **With this, all of Phase 2 (cart dual-mode + Stripe checkout + measurements UX) is shipped — Phase 3 (Discovery + SEO + privacy hardening) is next.** ⚠️ Pre-launch reminders (unchanged, still open): re-enable Supabase email confirmation (`mailer_autoconfirm` currently true) + custom SMTP; **activate Stripe account** (Thai bank + identity → live keys) and register a LIVE webhook endpoint pointing at the deployed `stripe-webhook` function; add order-confirmation email (needs SMTP).
 >
@@ -150,7 +152,9 @@ Two public buckets:
 ├── signup.html, login.html, forgot-password.html, reset-password.html, account.html        # Phase 1 WT-2 — auth
 ├── order-confirmation.html       # Phase 2 Stripe — post-payment docket; requireAuth; owner-RLS order read
 ├── measurements.html             # Phase 2 — self-entry measurements; requireAuth; sub-nav for 4 kinds; forms rendered by js/measurements.js
-├── serve.mjs                     # localhost:3000 dev server (vanilla node http)
+├── serve.mjs                     # localhost:3000 dev server (vanilla node http); serves .txt/.xml (Phase 3 #11)
+├── robots.txt                    # Phase 3 #11 — Allow all; Disallow 8 private pages; Sitemap: line
+├── sitemap.xml                   # Phase 3 #11 — GENERATED (scripts/generate-sitemap.mjs); 5 static + 6 canonical item×fabric PDP URLs; regenerate when catalogue changes
 ├── screenshot.mjs                # puppeteer screenshot → temporary screenshots/screenshot-N[-label].png (1440×900)
 ├── package.json                  # deps: puppeteer, pg. NOTE: @supabase/supabase-js installed --no-save (not in package.json)
 ├── .env.local                    # gitignored — Supabase URL + anon + service_role + PG* vars
@@ -165,7 +169,7 @@ Two public buckets:
 │   ├── customizer.js             # "Customize Your Suit" drawer — lazy-loaded on first click
 │   ├── layout.js                 # Phase 0 — fetch-injects components/ into [data-layout] slots; fires crf:layout-ready
 │   ├── newsletter.js             # Phase 0 — footer form → newsletter_subscribers (sets form.dataset.newsletterBound)
-│   ├── meta.js                   # Phase 0 — setMeta() no-op skeleton (Phase 3 fills it)
+│   ├── meta.js                   # Phase 3 (#11) — real setMeta({title,description,canonical,ogImage,ogType,jsonLd,robots}) tag-upsert; adopts existing hardcoded tags in place (no dupes); SITE_ORIGIN + canonicalFor() exports
 │   ├── auth.js                   # Phase 1 WT-1 — Supabase Auth wrapper (spec §6.1) + header account-link swap; imports supabase from esm.sh (browser-only)
 │   ├── profile.js                # Phase 1 WT-2 — getMyProfile/updateMyProfile + getLatestMeasurements/saveMeasurements (last two wired to UI in Phase 2 measurements). client() lazily imports auth.js
 │   ├── checkout.js               # Phase 2 Stripe — document-level click delegation on [data-checkout-button]; requireAuth bounces guests; flushes localStorage cart to server carts row; invokes create-checkout-session Edge Function; redirects to Stripe
@@ -197,6 +201,7 @@ Two public buckets:
 │   ├── upload-vbc-design-heroes.mjs         # one-shot: 18 VBC per-design hero PNGs + photo rows
 │   ├── pad-vbc-design-heroes.mjs            # one-shot: pad all 18 per-design heroes to 1054/1656 + re-upload
 │   ├── generate-customization-svgs.mjs      # one-shot: emit 65 placeholder SVGs
+│   ├── generate-sitemap.mjs                 # Phase 3 #11 — reads v_products (anon), emits sitemap.xml (static + canonical item×fabric PDPs, design-stripped)
 │   ├── run-sql.mjs                           # run any SQL file against the pooler (use for migrations)
 │   │  # ── TEST SUITE (all green on main; run with serve.mjs up from repo root) ──
 │   ├── test-customizer-flow / -design-hero-rail / -swatch-prefers-hero   # Phase 0 catalogue UI
@@ -213,7 +218,8 @@ Two public buckets:
 │   ├── test-checkout-flow.mjs           # Phase 2 Stripe — puppeteer: guest→login redirect, signed-in→Stripe redirect
 │   ├── test-checkout-purchase-e2e.mjs   # Phase 2 Stripe — GOLD-STANDARD: real 4242 test-card purchase → registered webhook → order paid (manual/e2e; not offline CI)
 │   ├── test-measurement-schema.mjs      # Phase 2 measurements — pure-Node drift guard: MEASUREMENT_SCHEMA keys ⇔ db/09_measurements.sql numeric columns (both directions)
-│   └── test-measurements-page.mjs       # Phase 2 measurements — puppeteer e2e: guest bounce, prefill round-trip, sub-nav switch, append-only, partial save
+│   ├── test-measurements-page.mjs       # Phase 2 measurements — puppeteer e2e: guest bounce, prefill round-trip, sub-nav switch, append-only, partial save
+│   └── test-seo-meta.mjs                # Phase 3 #11 — 44 checks: static-page raw-HTML meta/OG/canonical/JSON-LD, 8 private noindex, robots.txt + sitemap.xml, PDP setMeta (design-stripped canonical + Product/BreadcrumbList, no dupes), shop ?q= title/canonical
 │      # NOTE: test scripts read .env.local manually (no dotenv). Auth tests use admin createUser (bypasses email blocklist).
 │
 ├── supabase/
@@ -345,7 +351,7 @@ A **phase** is a sequence of these units. Phase ends when all its features are m
 | 8 | Admin dashboard (analytics + customers) | 5 | ⬜ |
 | 9 | CRM sync | 5 | ⬜ |
 | 10 | Professional polish | Continuous | ⬜ |
-| 11 | SEO optimisation | 3 baseline + continuous | ⬜ |
+| 11 | SEO optimisation | 3 baseline + continuous | ✅ baseline done — hybrid meta/OG/canonical + JSON-LD (ClothingStore/WebSite/Product/BreadcrumbList) + robots.txt + sitemap.xml + noindex, shipped 2026-07-13 (branch `phase-3/seo-baseline`). More extensive SEO deferred until the full catalogue is uploaded. |
 | 12 | Blog (SEO content) | 6 | ⬜ |
 | 13 | Newsletter signup + opt-in | **0 (capture wiring)** + 6 (campaigns) | ✅ V0 capture done in Phase 0 (footer form → `newsletter_subscribers`); double-opt-in + ESP deferred to Phase 6 |
 | 14 | Privacy page + security baseline | 1 (draft + CSP baseline) + 3 (CSP hardening + RLS audit) | ⬜ |
@@ -370,7 +376,7 @@ A **phase** is a sequence of these units. Phase ends when all its features are m
 | **0 — Foundation Refactor** | One shared spine for every page | Shared header/footer, `css/base.css`, normalized `.btn` system, meta scaffold, newsletter capture table + footer-form wiring (item 13 capture half) | **✅ shipped 2026-05-31** (commit `623c9c3`). Retrospective notes in the "Phase 0 — shipped" subsection below. |
 | **1 — Identity & Personal Data** | Customers exist; we capture them | 5, 6 (schema), 14 (privacy page draft + CSP baseline) | **✅ shipped 2026-07-07** (all 4 worktrees merged to main). |
 | 2 — Commerce | Real cart + paid orders | 2 (cart dual-mode ✅ merged 2026-07-08), 7 (Stripe checkout ✅ shipped 2026-07-09), 6 (measurements UX ✅ shipped 2026-07-10) | **✅ COMPLETE.** All three sub-projects shipped. |
-| 3 — Discovery + SEO + Privacy hardening | Findability + production-ready security | 3 (search ✅ 2026-07-10), 4 (shop search ✅ 2026-07-10), 11, 14 (CSP tighten + RLS audit) | Many parallel streams. **Search (#3+#4) shipped; #11 SEO + #14 hardening remain.** |
+| 3 — Discovery + SEO + Privacy hardening | Findability + production-ready security | 3 (search ✅ 2026-07-10), 4 (shop search ✅ 2026-07-10), 11 (SEO baseline ✅ 2026-07-13), 14 (CSP tighten + RLS audit) | Many parallel streams. **Search (#3+#4) + SEO baseline (#11) shipped; #14 hardening remains.** |
 | 4 — Customization expansion | Jacket + Trouser drawers | 1 (extend) | Half session. Schema already supports it (see §10). |
 | 5 — Operations | Admin + CRM | 8, 9 | Needs real data flowing. |
 | 6 — Marketing | Content + email | 12, 13 (full double-opt-in + ESP), 10 (final polish pass) | Last because earlier phases generate the audience. |
