@@ -17,6 +17,15 @@
 ">
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Product — Country Road Fashions</title>
+<!-- Generic fallback for non-JS scrapers; setMeta() (js/meta.js) adopts + overwrites these in place after data loads -->
+<meta name="description" content="A bespoke garment from Country Road Fashions — cut to your measurements and hand-finished in our Bangkok atelier since 1951." />
+<meta property="og:type" content="product" />
+<meta property="og:site_name" content="Country Road Fashions" />
+<meta property="og:title" content="Bespoke Tailoring — Country Road Fashions" />
+<meta property="og:description" content="A bespoke garment from Country Road Fashions — cut to your measurements and hand-finished in our Bangkok atelier since 1951." />
+<meta property="og:image" content="https://fzgsogdceptjvuahukbn.supabase.co/storage/v1/render/image/public/crf-products/hero/formal-suit-2-piece__vbc-wool/01.png?width=1200" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://fzgsogdceptjvuahukbn.supabase.co/storage/v1/render/image/public/crf-products/hero/formal-suit-2-piece__vbc-wool/01.png?width=1200" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Raleway:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -860,7 +869,7 @@
     document.getElementById('productTitle').innerHTML = title;
     document.getElementById('productPrice').textContent = fmtTHB(current.price);
     document.getElementById('designLabelRight').textContent = current.design_name;
-    document.title = `${current.fabric_brand} ${current.fabric_family} ${kind} — Country Road Fashions`;
+    // Title/meta are owned by applyPdpMeta() (runs after this in init()).
   }
 
   function applyPdpMeta(current) {

@@ -619,13 +619,17 @@
         : 'Browse made-to-measure suits, jackets and trousers in premium wool. Hand-finished in our Bangkok atelier, cut to your measurements.';
       canonical = canonicalFor('/shop.html' + (state.categoryId ? `?category=${encodeURIComponent(state.categoryId)}` : ''));
     }
+    const crumbs = [
+      { '@type': 'ListItem', position: 1, name: 'House', item: SITE_ORIGIN + '/' },
+      { '@type': 'ListItem', position: 2, name: 'Shop', item: SITE_ORIGIN + '/shop.html' },
+    ];
+    if (cat && !state.query) {
+      crumbs.push({ '@type': 'ListItem', position: 3, name: cat.name, item: canonical });
+    }
     const breadcrumbLd = {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'House', item: SITE_ORIGIN + '/' },
-        { '@type': 'ListItem', position: 2, name: 'Shop', item: SITE_ORIGIN + '/shop.html' },
-      ],
+      itemListElement: crumbs,
     };
     setMeta({ title, description, canonical, jsonLd: breadcrumbLd });
   }
