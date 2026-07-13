@@ -663,6 +663,7 @@
       clearTimeout(searchTimer);
       searchTimer = setTimeout(async () => {
         if (await loadProducts()) renderAll();
+        applyShopMeta();
       }, 250);
     });
     $('#filterToggle').addEventListener('click', () => {
