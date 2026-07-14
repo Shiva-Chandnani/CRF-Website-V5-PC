@@ -72,6 +72,55 @@ async function checkPage(browser, path) {
   return { path, violations };
 }
 
+// Fetch raw HTML/headers over HTTP (Node's global fetch — no import needed).
+async function getResponse(pathname) {
+  const res = await fetch(`${BASE}${pathname}`);
+  return { status: res.status, text: await res.text(), headers: res.headers };
+}
+
+// Phase 3 (#14): assert script-src no longer allows 'unsafe-inline' on any page.
+async function checkScriptSrcTightened() {
+  let bad = 0;
+  for (const path of PAGES) {
+    const { text } = await getResponse(path);
+    // Strip HTML comments so the rationale comment (which mentions script-src / unsafe-inline)
+    // is not mistaken for the actual CSP directive.
+    const html = text.replace(/<!--[\s\S]*?-->/g, '');
+    const m = html.match(/script-src([^;]*);/);
+    if (!m) {
+      console.error(`FAIL ${path}: no script-src directive found`);
+      bad++;
+      continue;
+    }
+    if (/unsafe-inline/.test(m[1])) {
+      console.error(`FAIL ${path}: script-src still allows 'unsafe-inline' —${m[1]}`);
+      bad++;
+    }
+  }
+  if (bad === 0) console.log(`\nPASS: no page allows 'unsafe-inline' in script-src`);
+  return bad;
+}
+
+// Phase 3 (#14): assert the dev server sends clickjacking + hardening headers.
+async function checkSecurityHeaders() {
+  const { headers } = await getResponse('/');
+  const xfo = headers.get('x-frame-options');
+  const cspHeader = headers.get('content-security-policy');
+  const xcto = headers.get('x-content-type-options');
+  const referrer = headers.get('referrer-policy');
+  const ok =
+    xfo === 'DENY' &&
+    !!cspHeader && cspHeader.includes("frame-ancestors 'none'") &&
+    xcto === 'nosniff' &&
+    referrer === 'strict-origin-when-cross-origin';
+  if (ok) {
+    console.log('PASS: security response headers present (X-Frame-Options, CSP frame-ancestors, nosniff, Referrer-Policy)');
+    return 0;
+  }
+  console.error('FAIL: missing/incorrect security headers', { xfo, cspHeader, xcto, referrer });
+  return 1;
+}
+
 async function main() {
   const browser = await puppeteer.launch({ headless: 'new' });
   let failed = 0;
@@ -91,11 +140,16 @@ async function main() {
   } finally {
     await browser.close();
   }
+
+  // Static-policy + response-header assertions (Phase 3 #14 hardening).
+  failed += await checkScriptSrcTightened();
+  failed += await checkSecurityHeaders();
+
   if (failed > 0) {
-    console.error(`\n${failed} page(s) failed CSP compliance.`);
+    console.error(`\n${failed} check(s) failed CSP compliance.`);
     process.exit(1);
   }
-  console.log(`\nAll ${PAGES.length} pages clean.`);
+  console.log(`\nAll ${PAGES.length} pages clean; script-src tightened; security headers present.`);
 }
 
 main().catch((err) => {
