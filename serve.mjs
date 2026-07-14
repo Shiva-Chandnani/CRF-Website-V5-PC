@@ -25,6 +25,13 @@ const MIME = {
   '.webm': 'video/webm',
 };
 
+const SECURITY_HEADERS = {
+  'Content-Security-Policy': "frame-ancestors 'none'",
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+};
+
 http.createServer((req, res) => {
   let urlPath = req.url.split('?')[0];
   if (urlPath === '/') urlPath = '/index.html';
@@ -32,8 +39,8 @@ http.createServer((req, res) => {
   const ext = path.extname(filePath);
   const mime = MIME[ext] || 'application/octet-stream';
   fs.readFile(filePath, (err, data) => {
-    if (err) { res.writeHead(404); res.end('Not found'); return; }
-    res.writeHead(200, { 'Content-Type': mime });
+    if (err) { res.writeHead(404, { ...SECURITY_HEADERS }); res.end('Not found'); return; }
+    res.writeHead(200, { 'Content-Type': mime, ...SECURITY_HEADERS });
     res.end(data);
   });
 }).listen(PORT, () => console.log(`Serving at http://localhost:${PORT}`));
