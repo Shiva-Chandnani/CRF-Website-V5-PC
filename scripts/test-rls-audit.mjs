@@ -33,6 +33,16 @@ function step(name, ok, detail = '') {
   if (!ok) failCount++;
 }
 
+// Number of rows a SELECT (or a write with a chained .select()) returned.
+const rowsVisible = (res) => res.data?.length ?? 0;
+
+// Write-lock PASS for a forge INSERT of a row the ATTACKER OWNS: the insert
+// MUST carry a chained .select(). On a leak, the attacker's own SELECT policy
+// returns the just-inserted row (length ≥ 1 → FAIL); on a block it errors or
+// returns [] (→ PASS). Never call this on a bare write — data would be null
+// and the check would pass vacuously.
+const forgeBlocked = (res) => !!res.error || rowsVisible(res) === 0;
+
 const MEASUREMENT_TABLES = [
   { table: 'customer_body_measurements', col: 'chest_in' },
   { table: 'customer_jacket_reference', col: 'collar_in' },
@@ -88,7 +98,7 @@ try {
   const updProfB = await anonA.from('profiles').update({ full_name: 'HACKED' }).eq('id', userB.id);
   const bFullNameAfter = (await admin.from('profiles').select('full_name').eq('id', userB.id).single()).data?.full_name;
   step('profiles: A cannot update B row',
-    !!updProfB.error || (updProfB.data?.length ?? 0) === 0 || bFullNameAfter !== 'HACKED',
+    !!updProfB.error || bFullNameAfter !== 'HACKED',
     updProfB.error ? 'blocked' : `full_name=${bFullNameAfter}`);
 
   // ── 2. measurement tables (owner-only insert/select) ────────────────
@@ -130,12 +140,17 @@ try {
   const cartsAFilteredB = await anonA.from('carts').select('user_id').eq('user_id', userB.id);
   step('carts: A filtered to B user_id → 0 rows', (cartsAFilteredB.data?.length ?? 0) === 0, `len=${cartsAFilteredB.data?.length}`);
 
+  // Cross-owner upsert: RETURNING is filtered by A's own SELECT policy, so a
+  // successful malicious write would still return []. Prove the block via an
+  // ADMIN readback of B's cart — it must be untouched by A's attempt.
   const badCartWrite = await anonA.from('carts').upsert(
-    { user_id: userB.id, items: [], updated_at: new Date().toISOString() },
+    { user_id: userB.id, items: [{ forged: true }], updated_at: new Date().toISOString() },
     { onConflict: 'user_id' });
+  const bCartAfter = (await admin.from('carts').select('items').eq('user_id', userB.id).single()).data?.items;
+  const bCartUntouched = Array.isArray(bCartAfter) && bCartAfter.length === 0;
   step('carts: A cannot upsert B cart',
-    !!badCartWrite.error || (badCartWrite.data?.length ?? 0) === 0,
-    badCartWrite.error ? 'blocked' : 'LEAK');
+    !!badCartWrite.error || bCartUntouched,
+    badCartWrite.error ? 'blocked' : `B.items=${JSON.stringify(bCartAfter)}`);
 
   // ── 5. orders — seeded by service role (mimics the Edge Function) ──
   const insOrdA = await admin.from('orders').insert({
@@ -156,15 +171,19 @@ try {
   const ordersAFilteredB = await anonA.from('orders').select('id').eq('id', orderIdB);
   step('orders: A filtered to B order id → 0 rows', (ordersAFilteredB.data?.length ?? 0) === 0, `len=${ordersAFilteredB.data?.length}`);
 
-  const forgeOrder = await anonA.from('orders').insert({ user_id: userA.id, status: 'pending', total_thb: 1, items: [] });
+  // Forge INSERT of an A-OWNED order: chain .select() so a leak (row created)
+  // is visible to A's SELECT policy → length ≥ 1 → FAIL. Block → error/[] → PASS.
+  const forgeOrder = await anonA.from('orders')
+    .insert({ user_id: userA.id, status: 'pending', total_thb: 1, items: [] })
+    .select('id');
   step('orders: client INSERT rejected (no policy)',
-    !!forgeOrder.error || (forgeOrder.data?.length ?? 0) === 0,
-    forgeOrder.error ? 'blocked' : 'LEAK');
+    forgeBlocked(forgeOrder),
+    forgeOrder.error ? 'blocked' : `visible=${rowsVisible(forgeOrder)}`);
 
   const tamperOrder = await anonA.from('orders').update({ status: 'paid' }).eq('id', orderIdA);
   const stillPending = (await admin.from('orders').select('status').eq('id', orderIdA).single()).data?.status;
   step('orders: client UPDATE cannot flip status',
-    !!tamperOrder.error || (tamperOrder.data?.length ?? 0) === 0 || stillPending === 'pending',
+    !!tamperOrder.error || stillPending === 'pending',
     `status=${stillPending}`);
 
   // ── 6. payments — seeded by service role, joined via orders ────────
@@ -184,12 +203,14 @@ try {
   const paymentsAFilteredB = await anonA.from('payments').select('id').eq('order_id', orderIdB);
   step('payments: A filtered to B order_id → 0 rows', (paymentsAFilteredB.data?.length ?? 0) === 0, `len=${paymentsAFilteredB.data?.length}`);
 
-  const forgePayment = await anonA.from('payments').insert({
-    order_id: orderIdA, stripe_event_id: `evt_audit_forge_${stamp}`, amount_thb: 1, status: 'succeeded',
-  });
+  // Forge INSERT against A's OWN order: A's join-based SELECT policy would
+  // return the row on a leak, so .select() makes the check able to fail.
+  const forgePayment = await anonA.from('payments')
+    .insert({ order_id: orderIdA, stripe_event_id: `evt_audit_forge_${stamp}`, amount_thb: 1, status: 'succeeded' })
+    .select('id');
   step('payments: client INSERT rejected (no policy)',
-    !!forgePayment.error || (forgePayment.data?.length ?? 0) === 0,
-    forgePayment.error ? 'blocked' : 'LEAK');
+    forgeBlocked(forgePayment),
+    forgePayment.error ? 'blocked' : `visible=${rowsVisible(forgePayment)}`);
 
   // ── 7. newsletter_subscribers — anon can insert only, no enumeration ─
   const anonAnon = createClient(URL, ANON, { auth: { persistSession: false } });
@@ -205,7 +226,7 @@ try {
   const updNl = await anonAnon.from('newsletter_subscribers').update({ source: 'hacked' }).eq('email', newsletterEmail);
   const sourceAfter = (await admin.from('newsletter_subscribers').select('source').eq('email', newsletterEmail).single()).data?.source;
   step('newsletter: anon UPDATE blocked',
-    !!updNl.error || (updNl.data?.length ?? 0) === 0 || sourceAfter === 'footer',
+    !!updNl.error || sourceAfter === 'footer',
     `source=${sourceAfter}`);
 
   const insNlA = await admin.from('newsletter_subscribers').insert({ email: emailA, profile_id: userA.id, source: 'signup' });
