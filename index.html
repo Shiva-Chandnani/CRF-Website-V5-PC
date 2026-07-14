@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
+<!-- CSP: script-src is 'self'-only (all inline scripts externalized to js/*). style-src keeps 'unsafe-inline' — many inline <style> blocks, no build step; style injection is not a script-exec vector. Rationale: docs/superpowers/specs/2026-07-14-csp-rls-hardening-design.md -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'unsafe-inline' https://esm.sh https://assets.calendly.com;
+  script-src 'self' https://esm.sh https://assets.calendly.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://assets.calendly.com;
   font-src 'self' https://fonts.gstatic.com;
   img-src 'self' data: https://*.supabase.co https://placehold.co;
@@ -826,26 +827,7 @@
 
 <div data-layout="footer" style="min-height:480px;background:var(--color-charcoal);"></div>
 
-<script>
-  (function () {
-    var video = document.getElementById('heroVideo');
-    var btn   = document.getElementById('videoToggle');
-    if (!video || !btn) return;
-
-    function sync() {
-      var playing = !video.paused && !video.ended;
-      btn.dataset.state = playing ? 'playing' : 'paused';
-      btn.setAttribute('aria-label', playing ? 'Pause background video' : 'Play background video');
-    }
-
-    btn.addEventListener('click', function () {
-      if (video.paused) video.play(); else video.pause();
-    });
-    video.addEventListener('play',  sync);
-    video.addEventListener('pause', sync);
-    sync();
-  })();
-</script>
+<script src="/js/index-hero-video.js"></script>
 
 <script type="module" src="js/cart.js"></script>
 
