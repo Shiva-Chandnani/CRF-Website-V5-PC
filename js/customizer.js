@@ -146,6 +146,9 @@ function renderListView() {
   const GROUP_LABELS = { jacket: 'Jacket', pants: 'Trouser' };
 
   // Distinct groups in display order (cats already sorted by display order).
+  // Keyed off visible categories; safe while every group has >=1 non-advanced
+  // category (true for the Suit today), so collapsing advanced options can't
+  // drop a whole group and flip a multi-group garment to a flat list.
   const groupsInOrder = [];
   for (const c of cats) {
     if (!groupsInOrder.includes(c.category_group)) groupsInOrder.push(c.category_group);

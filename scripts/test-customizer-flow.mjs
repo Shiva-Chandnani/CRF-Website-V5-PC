@@ -113,6 +113,8 @@ async function drive(itemType, expectTitle, rowSel, optSel, expectGroupHeaders) 
 
 await drive('formal-jacket', 'Jacket', 'jacket-lapel', 'jacket-lapel-peak', false);
 await drive('dress-pants',   'Trousers', 'pants-pleats', 'pants-pleats-single', false);
+// Suit MUST keep its two group headers ("Jacket" + "Trouser") — regression guard.
+await drive('formal-suit-2-piece', 'Suit', 'jacket-lapel', 'jacket-lapel-peak', true);
 
 // ---- Phase 4: mixed-cart spec renders all lines (guards the cart-index fix) ----
 await page.evaluate(() => localStorage.setItem('crf.cart.v1', JSON.stringify({
