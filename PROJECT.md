@@ -2,7 +2,9 @@
 
 Single source of truth for a new chat session to pick up where the previous one left off. Pair this with [CLAUDE.md](CLAUDE.md) (frontend rules) for full context.
 
-> **Last session ended** at: **✅ PHASE 3 COMPLETE — CSP/RLS HARDENING SHIPPED on branch `phase-3/csp-rls-hardening`** (2026-07-14, backlog #14 / Phase 3 close). Three workstreams: (A) **HTTP security headers** — `frame-ancestors 'none'` + `X-Frame-Options: DENY` + `X-Content-Type-Options: nosniff` + `Referrer-Policy` now sent by `serve.mjs` (dev) and documented for prod in new `docs/security/production-headers.md` (drop-in `_headers`/`vercel.json`/nginx snippets, host TBD). (B) **`script-src 'self'`** — all 12 executable inline scripts externalized to `js/*` files (`index-hero-video`, `book-appointment-tabs`, `shop-page`, `product-page`, `cart-page`, + 6 auth `*-page.js`); `'unsafe-inline'` dropped from `script-src` on all 14 pages; `style-src` retains `'unsafe-inline'` with a rationale comment (many inline `<style>`, no build; style ≠ script-exec vector). (C) **RLS audit** — new `scripts/test-rls-audit.mjs` (51 checks, both SELECT-isolation AND non-vacuous write-lock across profiles / 4 `customer_*` / 4 `v_latest_*` views / carts / orders / payments / newsletter_subscribers). No RLS misconfigs found. `test-csp-compliance.mjs` extended (asserts no `script-src` `unsafe-inline` + headers present). Full regression (17 tests) + 4 externalized-page screenshots clean. **With #14 done, PHASE 3 IS COMPLETE.** ⚠️ Pre-launch reminders: re-enable Supabase email confirmation + SMTP; activate Stripe account + LIVE webhook; order-confirmation email; regenerate `sitemap.xml` when the catalogue changes; **choose a production host and apply `docs/security/production-headers.md` (frame-ancestors/HSTS only truly enforce at the host).** **Git:** merged no-ff to `main` and pushed — local `main` == `origin/main` at `f3918f5` (verified 0 ahead / 0 behind, clean tree, 2026-07-14). Branch `phase-3/csp-rls-hardening` deleted + worktree removed.
+> **Last session ended** at: **✅ PHASE 4 COMPLETE — CUSTOMIZATION EXPANSION SHIPPED on branch `phase-4/customization-expansion`** (2026-07-15, backlog #1 extend). The "Customize" drawer now runs for standalone **`formal-jacket`** and **`dress-pants`** in addition to the Suit, reusing the existing catalogue (no new categories/options/SVGs, no price deltas). Data-driven: (A) migration `db/13_customization_jacket_pants.sql` seeds the junction rows (11 jacket → `formal-jacket`, 10 pants → `dress-pants`; idempotent `on conflict do nothing`). (B) a single `CUSTOMIZABLE` map in `js/product-page.js` drives button gating + the per-garment label ("Customize Your Suit/Jacket/Trousers") and passes `garment_noun` into the drawer. (C) `js/customizer.js` renders the title from `garment_noun` and shows category-group section headers **only when >1 group is present** — Suit keeps its "Jacket"/"Trouser" headers, single-cut garments render flat. (D) **Bug fix:** `js/cart-page.js` now merges the customization catalog index across **every** item type in the cart (was: only the first line's), so a mixed cart no longer drops a later line's spec rows. Tests: new `scripts/test-customization-item-types.mjs` (catalog assertions: jacket 11 / pants 10, group-pure, one default each) + `scripts/test-customizer-flow.mjs` extended with assertions for Suit + Jacket + Trouser drawers + mixed-cart spec (10 Phase-4 checks, all green). Full regression (token-discipline, layout-mount, 14-page CSP sweep) green; drawer screenshots verified (Jacket/Trouser flat, Suit unchanged). ⚠️ Pre-launch reminders (unchanged): re-enable Supabase email confirmation + SMTP; activate Stripe account + LIVE webhook; order-confirmation email; regenerate `sitemap.xml` when the catalogue changes; choose a production host and apply `docs/security/production-headers.md`. **Git:** to be merged no-ff to `main` on completion (branch `phase-4/customization-expansion`, off `53d2b6f`).
+>
+> **Prior — ✅ PHASE 3 COMPLETE — CSP/RLS HARDENING SHIPPED on branch `phase-3/csp-rls-hardening`** (2026-07-14, backlog #14 / Phase 3 close). Three workstreams: (A) **HTTP security headers** — `frame-ancestors 'none'` + `X-Frame-Options: DENY` + `X-Content-Type-Options: nosniff` + `Referrer-Policy` now sent by `serve.mjs` (dev) and documented for prod in new `docs/security/production-headers.md` (drop-in `_headers`/`vercel.json`/nginx snippets, host TBD). (B) **`script-src 'self'`** — all 12 executable inline scripts externalized to `js/*` files (`index-hero-video`, `book-appointment-tabs`, `shop-page`, `product-page`, `cart-page`, + 6 auth `*-page.js`); `'unsafe-inline'` dropped from `script-src` on all 14 pages; `style-src` retains `'unsafe-inline'` with a rationale comment (many inline `<style>`, no build; style ≠ script-exec vector). (C) **RLS audit** — new `scripts/test-rls-audit.mjs` (51 checks, both SELECT-isolation AND non-vacuous write-lock across profiles / 4 `customer_*` / 4 `v_latest_*` views / carts / orders / payments / newsletter_subscribers). No RLS misconfigs found. `test-csp-compliance.mjs` extended (asserts no `script-src` `unsafe-inline` + headers present). Full regression (17 tests) + 4 externalized-page screenshots clean. **With #14 done, PHASE 3 IS COMPLETE.** ⚠️ Pre-launch reminders: re-enable Supabase email confirmation + SMTP; activate Stripe account + LIVE webhook; order-confirmation email; regenerate `sitemap.xml` when the catalogue changes; **choose a production host and apply `docs/security/production-headers.md` (frame-ancestors/HSTS only truly enforce at the host).** **Git:** merged no-ff to `main` and pushed — local `main` == `origin/main` at `f3918f5` (verified 0 ahead / 0 behind, clean tree, 2026-07-14). Branch `phase-3/csp-rls-hardening` deleted + worktree removed.
 >
 > **Prior — ✅ SEO BASELINE SHIPPED on branch `phase-3/seo-baseline`** (2026-07-13, backlog #11). Hybrid SEO baseline: `js/meta.js` is now a real `setMeta()` tag-upsert (title/description/canonical/OG/Twitter + JSON-LD; **adopts** existing hardcoded tags in place so no duplicates). The 5 static indexable pages (index, shop, book-appointment, in-store, privacy) carry **hardcoded** meta+OG+canonical in raw HTML (crawler/social-scraper robust with no JS); index emits `ClothingStore` + `WebSite`/`SearchAction` JSON-LD, in-store emits `ClothingStore`. Dynamic pages call `setMeta()` after data loads: **PDP** emits `Product` + `BreadcrumbList` with a **design-stripped canonical** (35 variants → 6 canonical item×fabric PDPs); **shop** emits search-/category-aware title + `BreadcrumbList`. New `robots.txt` (Disallows 8 private pages + Sitemap line) + generated `sitemap.xml` (5 static + 6 canonical product URLs) via `scripts/generate-sitemap.mjs`; footer Sitemap link repointed. `noindex` on 8 private pages. Tests: `scripts/test-seo-meta.mjs` (44 checks) + 14-page CSP sweep + core regression (layout-mount, token-discipline, product-search, search-overlay, shop-search) all green. *(At the time this was written, #14 CSP/RLS hardening was the only remaining Phase 3 item — it has since shipped; see the current banner above and the "Phase 3 — CSP/RLS hardening (SHIPPED)" subsection in §7.)* This SEO session ended with `main` == `origin/main` at `606b237`.
 >
@@ -46,7 +48,7 @@ A static HTML/CSS/vanilla-JS website for **Country Road Fashions** — a Bangkok
 |---|---|---|
 | `/` | [index.html](index.html) | Landing page (hero video, category tiles, editorial, footer) |
 | `/shop.html` `?q=<query>` | [shop.html](shop.html) | Product browsing — left filter rail + 2-col grid. Cards group by `(item × fabric)` with design swatches that swap the photo on hover. **Phase 3: server-side ranked search** via the `search_products` RPC, combined (AND) with the sidebar filters; reads `?q=` on load (handoff target of the header search overlay); debounced re-query with a stale-response generation guard |
-| `/product.html?item=...&fabric=...&design=...` | [product.html](product.html) | Product detail page — thumbnail rail (per-design heroes + fabric) + main image + design selector + size selects + **Customize Your Suit** button (suit only) + accordion |
+| `/product.html?item=...&fabric=...&design=...` | [product.html](product.html) | Product detail page — thumbnail rail (per-design heroes + fabric) + main image + design selector + size selects + **Customize** button (Suit/Jacket/Trouser — Phase 4; label per garment) + accordion |
 | `/cart.html` | [cart.html](cart.html) | Cart page — lists line items with full customisation spec sheet; CTA passes spec into the consultation form |
 | `/book-appointment.html` | [book-appointment.html](book-appointment.html) | In-person / online consultation booking (Calendly embed placeholders) |
 | `/in-store.html` | [in-store.html](in-store.html) | Bangkok atelier, trunk shows, virtual consultation info |
@@ -125,7 +127,7 @@ payments (Phase 2 Stripe; id uuid pk, order_id → orders on delete cascade, str
 | `fabric_designs` | 35 — Cavani `WL-1102…WL-1128` (26) + VBC `WL-1129…WL-1137` (9). |
 | `fabric_design_photos` | 53 — 35 fabric closeups (`photo_type='fabric'`, `is_primary=true`, at `crf-fabrics/{fabric_number}/01.jpg`) **plus** 18 VBC per-design model photos (`photo_type='hero'`, at `crf-fabrics/{fabric_number}/hero-01.png` and `hero-02.png`). New column `photo_type` added by `db/migration-design-hero-photos.sql`. |
 | `v_products` | **105** (35 designs × 3 item types). |
-| `customization_categories` | 21 (11 jacket + 10 pants) — V1 catalogue applied to Suit only. |
+| `customization_categories` | 21 (11 jacket + 10 pants) — applied to Suit (all 21), standalone Jacket (11 jacket), standalone Trouser (10 pants) via junction (Phase 4). |
 | `customization_options` | 65 — every option has a placeholder SVG under `assets/customization/svg/`. |
 | `item_type_customization_categories` | 21 — every category linked to `formal-suit-2-piece`. |
 | `v_customization_catalog` | view: `(item_type, category, option)` resolved + ordered for the drawer. |
@@ -168,7 +170,7 @@ Two public buckets:
 ├── js/
 │   ├── data-loader.js            # @supabase/supabase-js client + getCategories / fabricImageUrl / productImageUrl
 │   ├── cart.js                   # localStorage cart (`crf.cart.v1`) — CRUD + header-badge updater, auto-mounts
-│   ├── customizer.js             # "Customize Your Suit" drawer — lazy-loaded on first click
+│   ├── customizer.js             # "Customize Your {Suit|Jacket|Trousers}" drawer (Phase 4) — lazy-loaded on first click; title from context.garment_noun; group headers only when >1 group
 │   ├── layout.js                 # Phase 0 — fetch-injects components/ into [data-layout] slots; fires crf:layout-ready
 │   ├── newsletter.js             # Phase 0 — footer form → newsletter_subscribers (sets form.dataset.newsletterBound)
 │   ├── meta.js                   # Phase 3 (#11) — real setMeta({title,description,canonical,ogImage,ogType,jsonLd,robots}) tag-upsert; adopts existing hardcoded tags in place (no dupes); SITE_ORIGIN + canonicalFor() exports
@@ -191,6 +193,7 @@ Two public buckets:
 │   ├── 10_carts.sql                     # Phase 2 cart — carts table + 4 owner-only RLS policies
 │   ├── 11_orders.sql                    # Phase 2 Stripe — orders + payments tables, RLS, orders_set_updated_at trigger; idempotent, transaction-wrapped
 │   ├── 12_product_search.sql            # Phase 3 — pg_trgm extension + search_products(query, …filters) RPC over v_products (tsvector prefix + fuzzy fallback); grants to anon+authenticated; idempotent
+│   ├── 13_customization_jacket_pants.sql # Phase 4 — seed junction rows: 11 jacket cats → formal-jacket, 10 pants cats → dress-pants; idempotent (on conflict do nothing)
 │   └── README.md                        # initial Supabase setup guide (one-time onboarding)
 │
 ├── scripts/
@@ -221,7 +224,8 @@ Two public buckets:
 │   ├── test-checkout-purchase-e2e.mjs   # Phase 2 Stripe — GOLD-STANDARD: real 4242 test-card purchase → registered webhook → order paid (manual/e2e; not offline CI)
 │   ├── test-measurement-schema.mjs      # Phase 2 measurements — pure-Node drift guard: MEASUREMENT_SCHEMA keys ⇔ db/09_measurements.sql numeric columns (both directions)
 │   ├── test-measurements-page.mjs       # Phase 2 measurements — puppeteer e2e: guest bounce, prefill round-trip, sub-nav switch, append-only, partial save
-│   └── test-seo-meta.mjs                # Phase 3 #11 — 44 checks: static-page raw-HTML meta/OG/canonical/JSON-LD, 8 private noindex, robots.txt + sitemap.xml, PDP setMeta (design-stripped canonical + Product/BreadcrumbList, no dupes), shop ?q= title/canonical
+│   ├── test-seo-meta.mjs                # Phase 3 #11 — 44 checks: static-page raw-HTML meta/OG/canonical/JSON-LD, 8 private noindex, robots.txt + sitemap.xml, PDP setMeta (design-stripped canonical + Product/BreadcrumbList, no dupes), shop ?q= title/canonical
+│   └── test-customization-item-types.mjs # Phase 4 — catalog assertions: formal-jacket=11 cats, dress-pants=10 cats, group-pure, exactly one default per category (customizer-flow.mjs extended with Jacket/Trouser/mixed-cart e2e)
 │      # NOTE: test scripts read .env.local manually (no dotenv). Auth tests use admin createUser (bypasses email blocklist).
 │
 ├── supabase/
@@ -343,7 +347,7 @@ A **phase** is a sequence of these units. Phase ends when all its features are m
 
 | # | Feature | Phase | Status |
 |---|---|---|---|
-| 1 | Customization for Suit | 4 (extend to Jacket/Trouser) | ✅ V1 done |
+| 1 | Customization for Suit | 4 (extend to Jacket/Trouser) | ✅ done — V1 Suit + Phase 4 extend to standalone Jacket + Trouser (shipped 2026-07-15, branch `phase-4/customization-expansion`) |
 | 2 | Add items to cart | 2 (server-side cart dual-mode) | ✅ done — V1 localStorage + Phase 2 offline-first server mirror (merged 2026-07-08) |
 | 3 | Site-wide search (header) | 3 | ✅ done — header typeahead overlay (`js/search-overlay.js`) on all 14 pages → `search_products` RPC (shipped 2026-07-10, branch `phase-3/product-search`) |
 | 4 | Shop page filters + search | 3 | ✅ done — `shop.html` server-side ranked search combined (AND) with the sidebar filters + `?q=` handoff (shipped 2026-07-10) |
@@ -379,7 +383,7 @@ A **phase** is a sequence of these units. Phase ends when all its features are m
 | **1 — Identity & Personal Data** | Customers exist; we capture them | 5, 6 (schema), 14 (privacy page draft + CSP baseline) | **✅ shipped 2026-07-07** (all 4 worktrees merged to main). |
 | 2 — Commerce | Real cart + paid orders | 2 (cart dual-mode ✅ merged 2026-07-08), 7 (Stripe checkout ✅ shipped 2026-07-09), 6 (measurements UX ✅ shipped 2026-07-10) | **✅ COMPLETE.** All three sub-projects shipped. |
 | 3 — Discovery + SEO + Privacy hardening | Findability + production-ready security | 3 (search ✅ 2026-07-10), 4 (shop search ✅ 2026-07-10), 11 (SEO baseline ✅ 2026-07-13), 14 (CSP tighten + RLS audit ✅ 2026-07-14) | **✅ COMPLETE.** All streams shipped: search (#3+#4), SEO baseline (#11), CSP/RLS hardening (#14). Next: Phase 4 (customization expansion) — see §7. |
-| 4 — Customization expansion | Jacket + Trouser drawers | 1 (extend) | Half session. Schema already supports it (see §10). |
+| 4 — Customization expansion | Jacket + Trouser drawers | 1 (extend) | **✅ COMPLETE** — standalone Jacket + Trouser customizers shipped 2026-07-15 (branch `phase-4/customization-expansion`); data-driven gating + auto group-headers + cart catalog-index merge fix (see §10). |
 | 5 — Operations | Admin + CRM | 8, 9 | Needs real data flowing. |
 | 6 — Marketing | Content + email | 12, 13 (full double-opt-in + ESP), 10 (final polish pass) | Last because earlier phases generate the audience. |
 | Continuous | Polish + SEO check per PR | 10, 11 | Every feature PR closes with frontend-design pass + meta-tags check. |
@@ -795,15 +799,15 @@ node screenshot.mjs "http://localhost:3000/product.html?item=formal-suit-2-piece
 
 ## 10. Customization drawer + cart
 
-The PDP renders a **"Customize Your Suit"** drawer for `formal-suit-2-piece` products. Selections are stored in a localStorage cart (`crf.cart.v1`) and previewed on [cart.html](cart.html). No backend cart yet — V1 is anonymous, browser-local.
+The PDP renders a **"Customize Your {Suit|Jacket|Trousers}"** drawer for `formal-suit-2-piece`, `formal-jacket`, and `dress-pants` products (Phase 4). Selections are stored in the localStorage cart (`crf.cart.v1`) — mirrored to the server `carts` row via the Phase 2 dual-mode cart — and previewed on [cart.html](cart.html). See "Standalone Jacket + Trouser customization (SHIPPED — Phase 4)" below.
 
-### Schema (V1 — Suit only)
+### Schema (categories shared across Suit / Jacket / Trouser)
 
 | Table / view | Rows | Purpose |
 |---|---|---|
 | `customization_categories` | 21 | The buckets the customer chooses across (Lapel, Vent, Pleats, …). `is_advanced` rows hide under "Show Additional Options". `is_tuxedo_only` is set but not yet enforced. |
 | `customization_options` | 65 | Each variant (Notch, Peak, Shawl, …). One default per category enforced by partial unique index. `price_delta_thb` defaults to 0 (V1 — all included). |
-| `item_type_customization_categories` | 21 | Junction: which categories apply to which item type. V1 = every category for Suit. |
+| `item_type_customization_categories` | 42 | Junction: which categories apply to which item type. Suit → all 21; `formal-jacket` → 11 jacket; `dress-pants` → 10 pants (Phase 4, `db/13_customization_jacket_pants.sql`). |
 | `v_customization_catalog` | view | `(item_type, category, option)` joined + sortable. The drawer fetches this once per PDP load. |
 
 ### Files
@@ -868,18 +872,15 @@ values ('formal-suit-2-piece', 'jacket-pocket-square');
 -- Insert the options under it (don't forget exactly one is_default=true).
 ```
 
-### Extending to Jacket / Trouser later
+### Standalone Jacket + Trouser customization (SHIPPED — Phase 4, 2026-07-15)
 
-The 11 jacket categories make sense for `formal-jacket`; the 10 pants categories for `dress-pants`. To enable:
+The customizer now runs for standalone `formal-jacket` (all 11 jacket-group categories) and `dress-pants` (all 10 pants-group categories) in addition to the Suit. Migration `db/13_customization_jacket_pants.sql` seeded the junction rows (idempotent, `on conflict do nothing`). Data-driven approach:
+- `js/product-page.js` holds a single `CUSTOMIZABLE = { 'formal-suit-2-piece':'Suit', 'formal-jacket':'Jacket', 'dress-pants':'Trousers' }` map — the one source for both button gating and the friendly noun. The button shows for any item type in the map with label `Customize Your ${noun}`; the noun is passed into the drawer as `context.garment_noun`.
+- `js/customizer.js` renders the title from `garment_noun` and shows category-group section headers ("Jacket"/"Trouser") **only when >1 group is present** — so the Suit keeps its two headers while single-cut garments render a flat list.
+- `js/cart-page.js` loads + merges the catalog index across **every** item type in the cart (was: only the first line's) — fixes a latent bug where a mixed cart would drop a later line's spec rows.
+- Tests: `scripts/test-customization-item-types.mjs` (catalog assertions) + `scripts/test-customizer-flow.mjs` (now asserts Suit + Jacket + Trouser drawers + mixed-cart spec).
 
-```sql
-insert into item_type_customization_categories (item_type_id, category_id)
-select 'formal-jacket', id from customization_categories where group_name = 'jacket';
-
-insert into item_type_customization_categories (item_type_id, category_id)
-select 'dress-pants', id from customization_categories where group_name = 'pants';
-```
-Then in [product.html](product.html), broaden the visibility check around `crf:pdp-ready` to enable the Customize button for those item types too (currently hard-coded to `formal-suit-2-piece`). The drawer copy ("Customize Your Suit") should be updated per item type at that point.
+No new categories/options/SVGs, no price deltas (all `price_delta_thb` still 0), no tuxedo-only enforcement.
 
 ### Things to know
 
