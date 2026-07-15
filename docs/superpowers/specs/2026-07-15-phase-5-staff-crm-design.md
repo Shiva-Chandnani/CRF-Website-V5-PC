@@ -64,17 +64,27 @@ Browser-direct via new **additive** staff RLS policies, consistent with the whol
 Migration `db/14_staff_crm.sql` (idempotent, transaction-wrapped, applied via `run-sql.mjs`):
 
 1. **POS integration seam — columns on `profiles`:**
-   - `pos_customer_id text unique` (nullable) — external id in the central POS.
-   - `source text not null default 'website'` — record origin.
+   - `pos_customer_id text unique` (nullable) — the POS `customers.id` UUID, kept as an
+     **immutable external identifier**. The future connector matches on THIS, never on
+     email/phone (per the POS data model doc: email may be missing/changed, and neither
+     email nor phone is unique in the POS).
+   - `source text not null default 'website' check (source in ('website','pos','manual','import'))`
+     — record origin, using the POS's own `source` vocabulary so both systems align.
    - `last_synced_at timestamptz` (nullable) — last successful POS reconcile.
-   No sync outbox/audit table yet (deferred to the connector phase).
+   No sync outbox / sync-status / sync-error columns yet (deferred to the connector phase —
+   see "Future POS connector alignment" below). Website `profiles` keeps its existing shape
+   (`full_name`, `phone`, `opted_in_newsletter`, …) — it is NOT restructured to mirror the POS
+   `customers` table; the `pos_customer_id` bridge is what links them.
 
 2. **`customer_notes`** — `id uuid pk default gen_random_uuid()`,
    `customer_id uuid not null references profiles(id) on delete cascade`,
    `author_id uuid references profiles(id) on delete set null`,
-   `body text not null`, `created_at timestamptz not null default now()`.
+   `body text not null`, `source text not null default 'website' check (source in ('website','pos','manual','import'))`,
+   `created_at timestamptz not null default now()`.
    Index on `(customer_id, created_at desc)`. RLS: staff SELECT (`is_staff()`), staff INSERT
    (`is_staff()` and `author_id = auth.uid()`); no customer/anon access; no update/delete in V1.
+   (Richer than the POS's single `customers.notes` text field on purpose — the connector can
+   later ingest the POS note as a row with `source='pos'`.)
 
 3. **`customer_tags`** — `customer_id uuid not null references profiles(id) on delete cascade`,
    `tag text not null check (char_length(tag) between 1 and 40)`,
@@ -132,6 +142,41 @@ New JS:
 - **Regression:** `test-rls-audit.mjs` (still green — owner-only unaffected), token-discipline,
   layout-mount, CSP sweep extended to the 2 new pages (now ~16 pages).
 - **Visual:** screenshot both admin pages at 1440 + 375, 2 comparison rounds.
+
+## Future POS connector alignment (informed by the POS data model)
+
+The retail POS (`supabase/migrations/202607060001_country_road_fashions_v1.sql`) stores customers
+in `public.customers` keyed by a UUID `id`, with orders (`orders.customer_id → customers.id`,
+`ON DELETE RESTRICT`) and measurements (`public.measurement_snapshots`: `customer_id`,
+`garment_type`, `values jsonb`, `unit`, `is_current`) as linked child records. This section
+records how the eventual connector will reconcile the two systems, so the seam we build now is
+compatible with it. **None of this is built in V1 — it is design intent for the connector phase.**
+
+- **Identity:** connector matches website ↔ POS by `profiles.pos_customer_id = customers.id`
+  (immutable UUID). Never match by email or phone (POS confirms both are non-unique and
+  mutable). Duplicate detection (email/phone as *signals*, not keys) is a connector concern.
+- **Field mapping (POS `customers` → website `profiles`):** `first_name`+`last_name` →
+  `full_name` (website stores a single name; connector can split/join); `phone`/`whatsapp`,
+  `email`, address fields, `country`(+ISO `country_code`), `postal_code` — website `profiles`
+  has no address today; the connector adds address columns *then* if needed, normalizing phone to
+  E.164 at that point. No address/whatsapp/consent columns are added in V1.
+- **Notes:** POS `customers.notes` (single text) → a `customer_notes` row with `source='pos'`.
+- **Measurements:** POS `measurement_snapshots` (garment_type + `values` JSONB + `is_current`) ↔
+  website's four typed `customer_*` tables + `v_latest_*` views. This is a non-trivial shape
+  translation owned by the connector; not attempted now. (Note: the POS doc flags its own
+  measurement persistence as an open gap, so this mapping firms up later regardless.)
+- **Consent:** POS `email_marketing_consent`/`whatsapp_marketing_consent` (+ timestamps) ↔
+  website `newsletter_subscribers.opted_in_at` / `profiles.opted_in_newsletter`. Reconciled by
+  the connector; no new consent columns in V1.
+- **Connector-phase additions (NOT now):** `sync_status` / `sync_error` columns (or a sync
+  outbox/audit table), explicit **field-ownership + conflict-resolution rules** (which system
+  wins per field), and retry logging — per the POS doc's sync recommendations.
+- **Open strategic question (for the user, not this spec):** the POS doc suggests the cleanest
+  end state is a **single shared Supabase project** as the source of truth for both POS and
+  website, which would remove the connector entirely. The website and POS are currently separate
+  Supabase projects. This V1 design is deliberately compatible with BOTH futures (shared DB *or*
+  a sync API) — the `pos_customer_id` bridge works either way — so we are not blocked on that
+  decision.
 
 ## Scope boundaries (explicitly deferred / out of scope)
 
