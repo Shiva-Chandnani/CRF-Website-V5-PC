@@ -139,9 +139,16 @@ function renderListView() {
   const cats = visibleCategories();
   const hasAdvanced = catalog.some(c => c.is_advanced);
 
-  // Group rows by jacket vs pants
-  const jacket = cats.filter(c => c.category_group === 'jacket');
-  const pants  = cats.filter(c => c.category_group === 'pants');
+  // Group labels for multi-group garments (e.g. the Suit). Single-group
+  // garments (standalone jacket / trouser) render flat with no header.
+  const GROUP_LABELS = { jacket: 'Jacket', pants: 'Trouser' };
+
+  // Distinct groups in display order (cats already sorted by display order).
+  const groupsInOrder = [];
+  for (const c of cats) {
+    if (!groupsInOrder.includes(c.category_group)) groupsInOrder.push(c.category_group);
+  }
+  const showGroupHeaders = groupsInOrder.length > 1;
 
   const rowHtml = (c) => `
     <button type="button" class="cz-row" data-cz-row="${c.category_id}">
@@ -151,11 +158,19 @@ function renderListView() {
     </button>
   `;
 
+  const rowsHtml = groupsInOrder.map((g) => {
+    const groupCats = cats.filter(c => c.category_group === g);
+    const header = showGroupHeaders
+      ? `<p class="cz-group">${escapeHtml(GROUP_LABELS[g] || g)}</p>`
+      : '';
+    return header + groupCats.map(rowHtml).join('');
+  }).join('');
+
   drawer.innerHTML = `
     <div class="cz-panels" data-cz-view="list">
       <section class="cz-panel cz-panel--list">
         <header class="cz-header">
-          <h2 class="cz-title">Customize Your Suit</h2>
+          <h2 class="cz-title">Customize Your ${escapeHtml(context.garment_noun || 'Garment')}</h2>
           <button type="button" class="cz-close" aria-label="Close" data-cz-close>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 1L13 13M13 1L1 13"/></svg>
           </button>
@@ -165,10 +180,7 @@ function renderListView() {
           <p class="cz-context-value">${escapeHtml(context.fabric_design_name || context.fabric_type_name || '')}</p>
         </div>
         <div class="cz-rows">
-          <p class="cz-group">Jacket</p>
-          ${jacket.map(rowHtml).join('')}
-          <p class="cz-group">Trouser</p>
-          ${pants.map(rowHtml).join('')}
+          ${rowsHtml}
           ${hasAdvanced ? `
             <button type="button" class="cz-toggle-advanced" data-cz-toggle-advanced>
               ${showAdvanced ? 'Hide Additional Options' : 'Show Additional Options'}
