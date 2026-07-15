@@ -1,16 +1,18 @@
 // =============================================================================
-// Country Road Fashions — Suit Customizer Drawer
+// Country Road Fashions — Garment Customizer Drawer
 // =============================================================================
-// A slide-in drawer that renders the customization catalogue for a single
-// item type (V1: formal-suit-2-piece). The drawer has two view states:
-//   • list   — the 21 categories, each row shows label + current value
+// A slide-in drawer that renders the customization catalogue for one item type
+// (Phase 4: formal-suit-2-piece, formal-jacket, or dress-pants). The drawer has
+// two view states:
+//   • list   — the item type's categories, each row shows label + current value
+//              (category groups get section headers only when >1 group present)
 //   • detail — grid of variant cards for one category, with description
 //
 // State lives entirely in this module. On "Add to Cart" the current selections
 // are passed to cart.js and persisted to localStorage.
 //
 // Public API: openCustomizer({ item_type_id, fabric_design_id, price_thb,
-//                              fabric_design_name, fabric_type_name })
+//                              fabric_design_name, fabric_type_name, garment_noun })
 // =============================================================================
 
 import { supabase } from './data-loader.js';
