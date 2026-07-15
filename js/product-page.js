@@ -344,6 +344,12 @@
 
   init();
   import '/js/cart.js';
+  // Phase 4: item types that expose the customizer → friendly noun for copy.
+  const CUSTOMIZABLE = {
+    'formal-suit-2-piece': 'Suit',
+    'formal-jacket':       'Jacket',
+    'dress-pants':         'Trousers',
+  };
   // Customize button: lazy-load drawer module on first click
   const customizeBtn = document.getElementById('customizeBtn');
   if (customizeBtn) {
@@ -360,16 +366,19 @@
         price_thb: s.current.price,
         fabric_design_name: s.current.design_name,
         fabric_type_name: `${brand} ${family}`.trim(),
+        garment_noun: CUSTOMIZABLE[s.current.item_type_id] || 'Garment',
       });
     });
   }
-  // Toggle customizer visibility based on item type
+  // Toggle customizer visibility + label based on item type
   window.addEventListener('crf:pdp-ready', () => {
     const s = window.__crfState;
     const btn = document.getElementById('customizeBtn');
     const row = document.getElementById('ctaRow');
     if (!btn || !s?.current) return;
-    if (s.current.item_type_id === 'formal-suit-2-piece') {
+    const noun = CUSTOMIZABLE[s.current.item_type_id];
+    if (noun) {
+      btn.textContent = `Customize Your ${noun}`;
       btn.hidden = false;
       row?.classList.remove('is-single');
     } else {

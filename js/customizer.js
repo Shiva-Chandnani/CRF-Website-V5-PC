@@ -1,16 +1,18 @@
 // =============================================================================
-// Country Road Fashions — Suit Customizer Drawer
+// Country Road Fashions — Garment Customizer Drawer
 // =============================================================================
-// A slide-in drawer that renders the customization catalogue for a single
-// item type (V1: formal-suit-2-piece). The drawer has two view states:
-//   • list   — the 21 categories, each row shows label + current value
+// A slide-in drawer that renders the customization catalogue for one item type
+// (Phase 4: formal-suit-2-piece, formal-jacket, or dress-pants). The drawer has
+// two view states:
+//   • list   — the item type's categories, each row shows label + current value
+//              (category groups get section headers only when >1 group present)
 //   • detail — grid of variant cards for one category, with description
 //
 // State lives entirely in this module. On "Add to Cart" the current selections
 // are passed to cart.js and persisted to localStorage.
 //
 // Public API: openCustomizer({ item_type_id, fabric_design_id, price_thb,
-//                              fabric_design_name, fabric_type_name })
+//                              fabric_design_name, fabric_type_name, garment_noun })
 // =============================================================================
 
 import { supabase } from './data-loader.js';
@@ -139,9 +141,19 @@ function renderListView() {
   const cats = visibleCategories();
   const hasAdvanced = catalog.some(c => c.is_advanced);
 
-  // Group rows by jacket vs pants
-  const jacket = cats.filter(c => c.category_group === 'jacket');
-  const pants  = cats.filter(c => c.category_group === 'pants');
+  // Group labels for multi-group garments (e.g. the Suit). Single-group
+  // garments (standalone jacket / trouser) render flat with no header.
+  const GROUP_LABELS = { jacket: 'Jacket', pants: 'Trouser' };
+
+  // Distinct groups in display order (cats already sorted by display order).
+  // Keyed off visible categories; safe while every group has >=1 non-advanced
+  // category (true for the Suit today), so collapsing advanced options can't
+  // drop a whole group and flip a multi-group garment to a flat list.
+  const groupsInOrder = [];
+  for (const c of cats) {
+    if (!groupsInOrder.includes(c.category_group)) groupsInOrder.push(c.category_group);
+  }
+  const showGroupHeaders = groupsInOrder.length > 1;
 
   const rowHtml = (c) => `
     <button type="button" class="cz-row" data-cz-row="${c.category_id}">
@@ -151,11 +163,19 @@ function renderListView() {
     </button>
   `;
 
+  const rowsHtml = groupsInOrder.map((g) => {
+    const groupCats = cats.filter(c => c.category_group === g);
+    const header = showGroupHeaders
+      ? `<p class="cz-group">${escapeHtml(GROUP_LABELS[g] || g)}</p>`
+      : '';
+    return header + groupCats.map(rowHtml).join('');
+  }).join('');
+
   drawer.innerHTML = `
     <div class="cz-panels" data-cz-view="list">
       <section class="cz-panel cz-panel--list">
         <header class="cz-header">
-          <h2 class="cz-title">Customize Your Suit</h2>
+          <h2 class="cz-title">Customize Your ${escapeHtml(context.garment_noun || 'Garment')}</h2>
           <button type="button" class="cz-close" aria-label="Close" data-cz-close>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 1L13 13M13 1L1 13"/></svg>
           </button>
@@ -165,10 +185,7 @@ function renderListView() {
           <p class="cz-context-value">${escapeHtml(context.fabric_design_name || context.fabric_type_name || '')}</p>
         </div>
         <div class="cz-rows">
-          <p class="cz-group">Jacket</p>
-          ${jacket.map(rowHtml).join('')}
-          <p class="cz-group">Trouser</p>
-          ${pants.map(rowHtml).join('')}
+          ${rowsHtml}
           ${hasAdvanced ? `
             <button type="button" class="cz-toggle-advanced" data-cz-toggle-advanced>
               ${showAdvanced ? 'Hide Additional Options' : 'Show Additional Options'}

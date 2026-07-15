@@ -18,13 +18,16 @@ let monogramThreadLabels = {
   'ivory':    'Ivory',
 };
 
-async function loadCatalogIndex(itemTypeId) {
-  if (catalogIndex) return;
+let catalogLoaded = false;
+async function loadCatalogIndex(itemTypeIds) {
+  if (catalogLoaded) return;
+  const ids = [...new Set(itemTypeIds)].filter(Boolean);
+  if (!ids.length) { catalogIndex = {}; catalogLoaded = true; return; }
   const { data, error } = await supabase
     .from('v_customization_catalog')
     .select('category_id, category_name, category_display_order, option_id, option_name')
-    .eq('item_type_id', itemTypeId);
-  if (error) { console.error(error); catalogIndex = {}; return; }
+    .in('item_type_id', ids);
+  if (error) { console.error(error); catalogIndex = {}; catalogLoaded = true; return; }
   catalogIndex = {};
   for (const r of data) {
     catalogIndex[r.option_id] = {
@@ -34,6 +37,7 @@ async function loadCatalogIndex(itemTypeId) {
       option_name: r.option_name,
     };
   }
+  catalogLoaded = true;
 }
 
 async function loadProducts(productIds) {
@@ -145,8 +149,8 @@ async function render() {
     return;
   }
 
-  // Ensure catalog index loaded (first item's item_type)
-  await loadCatalogIndex(cart.items[0].item_type_id);
+  // Ensure catalog index covers EVERY item type in the cart (mixed carts).
+  await loadCatalogIndex(cart.items.map(x => x.item_type_id));
 
   // Fetch all product rows
   const productIds = cart.items.map(x => `${x.item_type_id}__${x.fabric_design_id}`);
