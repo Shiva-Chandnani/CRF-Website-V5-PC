@@ -82,16 +82,28 @@ async function loginViaForm(page, email) {
   step('search filters to the seeded customer', rowCount >= 1, `rows=${rowCount}`);
 
   await page.goto(`${BASE}/admin-customer.html?id=${idCust}`, { waitUntil: 'networkidle0' });
+  // Each mutation re-renders #cdBody (addTag/addNote call render()), so wait on
+  // actual DOM state after every action rather than fixed delays (detached-node race).
   await page.waitForSelector('#tagForm', { timeout: 8000 });
   await page.type('#tagInput', 'vip');
   await page.click('#tagForm button[type=submit]');
-  await new Promise(r => setTimeout(r, 700));
-  step('tag added + shown', (await page.$$eval('.cd-tag', els => els.map(e => e.textContent))).some(t => t.includes('vip')));
+  let tagOk = true;
+  await page.waitForFunction(
+    () => [...document.querySelectorAll('.cd-tag')].some(e => e.textContent.includes('vip')),
+    { timeout: 8000 },
+  ).catch(() => { tagOk = false; });
+  step('tag added + shown', tagOk);
 
+  // #noteForm/#noteInput were replaced by the post-tag re-render — re-wait for them.
+  await page.waitForSelector('#noteInput', { timeout: 8000 });
   await page.type('#noteInput', 'Called about wedding suit');
   await page.click('#noteForm button[type=submit]');
-  await new Promise(r => setTimeout(r, 700));
-  step('note added + shown', (await page.$eval('#notes', el => el.textContent)).includes('wedding suit'));
+  let noteOk = true;
+  await page.waitForFunction(
+    () => (document.querySelector('#notes')?.textContent || '').includes('wedding suit'),
+    { timeout: 8000 },
+  ).catch(() => { noteOk = false; });
+  step('note added + shown', noteOk);
   await page.close();
 }
 
