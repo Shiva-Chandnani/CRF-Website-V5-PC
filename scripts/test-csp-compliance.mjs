@@ -24,6 +24,8 @@ const PAGES = [
   '/account.html',
   '/order-confirmation.html',
   '/measurements.html',
+  '/admin-customers.html',
+  '/admin-customer.html',
 ];
 
 function isCspViolation(text) {
