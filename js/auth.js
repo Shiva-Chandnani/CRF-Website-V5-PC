@@ -115,6 +115,22 @@ export async function requireGuest({ redirectTo = '/account.html' } = {}) {
   return null;
 }
 
+export async function requireStaff({ redirectTo = '/login.html', denyTo = '/' } = {}) {
+  const session = await getSession();
+  if (!session) {
+    const next = encodeURIComponent(location.pathname + location.search);
+    location.replace(`${redirectTo}?next=${next}`);
+    return null;
+  }
+  const { data, error } = await getSupabase()
+    .from('profiles').select('role').eq('id', session.user.id).single();
+  if (error || !data || !['staff', 'admin'].includes(data.role)) {
+    location.replace(denyTo);
+    return null;
+  }
+  return session;
+}
+
 // ---------------------------------------------------------------------------
 // Account management
 // ---------------------------------------------------------------------------

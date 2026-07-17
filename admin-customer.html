@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<!-- CSP: script-src is 'self'-only (all inline scripts externalized to js/*). style-src keeps 'unsafe-inline' — many inline <style> blocks, no build step; style injection is not a script-exec vector. Rationale: docs/superpowers/specs/2026-07-14-csp-rls-hardening-design.md -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' https://esm.sh https://assets.calendly.com;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://assets.calendly.com;
+  font-src 'self' https://fonts.gstatic.com;
+  img-src 'self' data: https://*.supabase.co https://placehold.co;
+  media-src 'self';
+  connect-src 'self' https://*.supabase.co wss://*.supabase.co;
+  frame-src https://calendly.com;
+  form-action 'self';
+  base-uri 'self';
+  object-src 'none';
+">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Customer — CRF Staff</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Raleway:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="preload" as="fetch" href="/components/header.html" crossorigin>
+<link rel="preload" as="fetch" href="/components/footer.html" crossorigin>
+<link rel="stylesheet" href="/css/base.css">
+<style>
+  :root { --color-jet:#0E0F11; --color-charcoal:#1A1B1F; }
+</style>
+<script type="module" src="/js/layout.js"></script>
+<script type="module" src="/js/search-overlay.js"></script>
+<script type="module" src="/js/auth.js"></script>
+<style>
+  .cd-shell {
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding: var(--space-8) var(--space-6) var(--space-9);
+    background: var(--color-off-white);
+  }
+  .cd-inner { max-width: 780px; margin: 0 auto; }
+
+  .cd-back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+    text-decoration: none;
+    margin-bottom: var(--space-6);
+    transition: color var(--t-fast) var(--ease-out);
+  }
+  .cd-back:hover, .cd-back:focus-visible { color: var(--color-jet); }
+  .cd-back:focus-visible { outline: 2px solid var(--color-jet); outline-offset: 3px; }
+
+  .cd-eyebrow {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--color-muted);
+    margin: 0 0 var(--space-2);
+  }
+  #cdName {
+    font-family: var(--font-serif); font-weight: 500;
+    font-size: clamp(30px, 4vw, 44px);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-jet);
+    margin: 0 0 var(--space-7);
+    word-break: break-word;
+  }
+
+  .cd-loading, .cd-error {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--color-muted);
+    padding: var(--space-6) 0;
+  }
+
+  /* --- Sections --- */
+  .cd-section { margin: 0 0 var(--space-7); }
+  .cd-section h2 {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--color-muted);
+    font-weight: 500;
+    margin: 0 0 var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  /* --- Key/value rows --- */
+  .cd-row {
+    display: flex;
+    gap: var(--space-5);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--color-rule);
+    font-family: var(--font-sans);
+    font-size: 14px;
+  }
+  .cd-row:last-child { border-bottom: none; }
+  .cd-row .k {
+    width: 160px;
+    flex-shrink: 0;
+    color: var(--color-muted);
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    padding-top: 1px;
+  }
+  .cd-row .v { color: var(--color-ink); }
+  .cd-row .v--muted { color: var(--color-muted); }
+  .cd-box {
+    background: var(--color-white);
+    border: 1px solid var(--color-rule);
+    padding: var(--space-2) var(--space-5);
+  }
+
+  /* --- Tags --- */
+  .cd-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+  }
+  .cd-tags:empty::after,
+  .cd-tags-empty {
+    content: 'No tags yet';
+  }
+  .cd-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    background: var(--color-white);
+    border: 1px solid var(--color-rule);
+    color: var(--color-jet);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    padding: 5px 6px 5px 12px;
+  }
+  .cd-tag button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-muted);
+    font-size: 15px;
+    line-height: 1;
+    padding: 2px 4px;
+    transition: color var(--t-fast) var(--ease-out);
+  }
+  .cd-tag button:hover, .cd-tag button:focus-visible { color: var(--color-jet); }
+  .cd-tag button:focus-visible { outline: 2px solid var(--color-jet); outline-offset: 1px; }
+  .cd-empty { font-family: var(--font-sans); font-size: 13px; color: var(--color-muted); }
+
+  /* --- Forms (tag add + note add) --- */
+  .cd-form-row {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-start;
+  }
+  .cd-form-row .input { flex: 1; }
+  #tagForm.cd-form-row { max-width: 320px; }
+  #noteForm { margin-bottom: var(--space-5); }
+  #noteForm textarea.input { width: 100%; resize: vertical; min-height: 64px; }
+  #noteForm .btn { margin-top: var(--space-3); }
+
+  /* --- Notes list --- */
+  .cd-note {
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--color-rule);
+  }
+  .cd-note:last-child { border-bottom: none; }
+  .cd-note .body {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--color-ink);
+    line-height: var(--leading-body);
+    white-space: pre-wrap;
+  }
+  .cd-note .meta {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    margin-top: var(--space-2);
+  }
+
+  @media (max-width: 640px) {
+    .cd-shell { padding: var(--space-6) var(--space-4) var(--space-8); }
+    .cd-row { flex-direction: column; gap: var(--space-1); }
+    .cd-row .k { width: auto; }
+    #tagForm.cd-form-row { max-width: none; }
+  }
+</style>
+</head>
+<body>
+<div data-layout="header" style="min-height:72px;background:var(--color-jet);"></div>
+<main class="cd-shell">
+  <div class="cd-inner">
+    <a class="cd-back" href="/admin-customers.html">&larr; All customers</a>
+    <p class="cd-eyebrow">Staff · CRM</p>
+    <h1 id="cdName">Customer</h1>
+    <div id="cdBody"><p class="cd-loading">Loading…</p></div>
+  </div>
+</main>
+<div data-layout="footer"></div>
+<script type="module" src="/js/admin-customer-page.js"></script>
+</body>
+</html>

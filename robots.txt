@@ -8,5 +8,7 @@ Disallow: /forgot-password.html
 Disallow: /reset-password.html
 Disallow: /measurements.html
 Disallow: /order-confirmation.html
+Disallow: /admin-customers.html
+Disallow: /admin-customer.html
 
 Sitemap: https://countryroadfashions.com/sitemap.xml
