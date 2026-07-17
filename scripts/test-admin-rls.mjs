@@ -86,6 +86,16 @@ const custNote = await custA.from('customer_notes')
 step('customer A cannot write notes', !!custNote.error || rows(custNote) === 0);
 step('customer A can still read own profile', rows(await custA.from('profiles').select('id').eq('id', idA)) === 1);
 
+// --- privilege escalation: customer A cannot self-promote to staff (db/16 guard) ---
+const escalate = await custA.from('profiles').update({ role: 'staff' }).eq('id', idA).select();
+const { data: roleAfter } = await admin.from('profiles').select('role').eq('id', idA).single();
+step('customer A cannot self-promote to staff',
+  (!!escalate.error || rows(escalate) === 0) && roleAfter?.role === 'customer',
+  `err=${escalate.error?.message || 'none'} role=${roleAfter?.role}`);
+// and even after attempting it, still cannot read another customer
+step('customer A still isolated after escalation attempt',
+  rows(await custA.from('profiles').select('id').eq('id', idB)) === 0);
+
 // --- anon locked out ---
 step('anon cannot read profiles', rows(await anon.from('profiles').select('id').eq('id', idA)) === 0);
 step('anon cannot read notes', rows(await anon.from('customer_notes').select('id')) === 0);

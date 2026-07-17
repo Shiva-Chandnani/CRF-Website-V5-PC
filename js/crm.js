@@ -21,7 +21,12 @@ export async function listCustomers({ q = '', limit = 25, offset = 0 } = {}) {
     .range(offset, offset + limit - 1);
   const term = q.trim();
   if (term) {
-    const like = `%${term.replace(/[%_]/g, '')}%`;
+    // Strip LIKE wildcards (%, _) AND PostgREST .or()-grammar delimiters
+    // (comma, parens, dot, backslash, asterisk) so the term can't inject extra
+    // filter conditions or throw a 400 on unbalanced parens. RLS still gates
+    // results regardless — this keeps the search well-formed.
+    const safe = term.replace(/[%_,().*\\]/g, '');
+    const like = `%${safe}%`;
     query = query.or(`full_name.ilike.${like},email.ilike.${like},phone.ilike.${like}`);
   }
   const { data, error, count } = await query;
@@ -31,13 +36,23 @@ export async function listCustomers({ q = '', limit = 25, offset = 0 } = {}) {
 
 // One customer's full record.
 export async function getCustomer(id) {
-  const [{ data: profile }, orders, payments, tags, notes] = await Promise.all([
+  const [{ data: profile }, orders, tags, notes] = await Promise.all([
     db().from('profiles').select('*').eq('id', id).single(),
     db().from('orders').select('id, status, total_thb, currency, created_at, items').eq('user_id', id).order('created_at', { ascending: false }),
-    db().from('payments').select('id, order_id, amount_thb, status, created_at').order('created_at', { ascending: false }),
     db().from('customer_tags').select('tag, created_at').eq('customer_id', id).order('created_at', { ascending: false }),
     db().from('customer_notes').select('id, body, author_id, created_at').eq('customer_id', id).order('created_at', { ascending: false }),
   ]);
+  // Scope payments to THIS customer's orders (staff can read all payments, so
+  // never fetch the whole table). Empty order set → skip the query entirely.
+  const orderIds = (orders.data || []).map(o => o.id);
+  let payments = { data: [] };
+  if (orderIds.length) {
+    payments = await db()
+      .from('payments')
+      .select('id, order_id, amount_thb, status, created_at')
+      .in('order_id', orderIds)
+      .order('created_at', { ascending: false });
+  }
   const measurements = await getLatestMeasurements(id);
   return {
     profile,

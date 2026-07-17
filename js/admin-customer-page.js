@@ -27,8 +27,8 @@ async function render() {
     return;
   }
   const p = data.profile || {};
-  const orderIds = new Set(data.orders.map((o) => o.id));
-  const payments = data.payments.filter((pm) => orderIds.has(pm.order_id)); // owner-join already scopes, this is display-tidy
+  // Payments are already scoped to this customer's orders in crm.js getCustomer().
+  const payments = data.payments;
   document.getElementById('cdName').textContent = p.full_name || p.email || 'Customer';
 
   body.innerHTML = `
