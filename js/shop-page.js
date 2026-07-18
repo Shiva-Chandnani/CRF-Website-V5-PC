@@ -14,6 +14,12 @@ const ITEM_KIND = {
   'accessories':     'Accessory',
 };
 
+// ---------- Subcategory facet labels that differ from the slug title-cased form ----------
+const SUBCATEGORY_LABEL = {
+  'dress-pants': 'Dress Trousers',
+  'linen-pants': 'Linen Trousers',
+};
+
 // ---------- Pattern human labels ----------
 const PATTERN_LABEL = {
   'solid': 'Solid',
@@ -57,7 +63,7 @@ function pageTitleFor(category) {
   const map = {
     'suits':           { title: '<em>Suits</em>',           tagline: 'Two-piece, three-piece, dinner and ceremonial — cut for the wearer.' },
     'shirts':          { title: '<em>Shirts</em>',          tagline: 'Egyptian poplin, Bohemian linen, oxfords — fitted to the millimetre.' },
-    'pants':           { title: '<em>Pants</em>',           tagline: 'Trousers, chinos, linens. The foundation of the wardrobe.' },
+    'pants':           { title: '<em>Trousers</em>',        tagline: 'Trousers, chinos, linens. The foundation of the wardrobe.' },
     'coats':           { title: '<em>Coats</em>',           tagline: 'Peacoats and overcoats for the cooler months.' },
     'jackets-blazers': { title: 'Jackets &amp; <em>Blazers</em>', tagline: 'Soft-shouldered tailoring — formal, summer, hopsack.' },
     'mandarin-collar': { title: '<em>Mandarin Collar</em>',  tagline: 'A signature silhouette — vests and full suits.' },
@@ -188,8 +194,8 @@ function renderSubcategoryList() {
   });
   if (subs.size === 0) { ul.innerHTML = '<li><span style="color:var(--color-grey-mid)">—</span></li>'; return; }
   [...subs.values()].forEach(s => {
-    // friendly label from slug
-    const label = s.id.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    // friendly label from slug (overridden where the display name differs)
+    const label = SUBCATEGORY_LABEL[s.id] || s.id.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     ul.appendChild(makeFilterLi(label, s.count, state.subcategoryId === s.id, () => setFilter('subcategoryId', state.subcategoryId === s.id ? null : s.id)));
   });
 }
