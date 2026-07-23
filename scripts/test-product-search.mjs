@@ -71,6 +71,17 @@ try {
     const { data, error } = await rpc({ search_query: '!!!' });
     step('punctuation-only query does not error', !error && Array.isArray(data), error?.message);
   }
+  // hidden "pants" alias: American term still resolves trousers (18_search_pants_alias),
+  // parity with "trousers", and the alias never leaks into a displayed name
+  {
+    const pants = (await rpc({ search_query: 'pants' })).data || [];
+    const trousers = (await rpc({ search_query: 'trousers' })).data || [];
+    step('"pants" alias resolves trousers with parity',
+      pants.length > 0 && pants.length === trousers.length &&
+      pants.every(r => r.category_id === 'pants') &&
+      pants.every(r => !/pant/i.test(r.display_name)),
+      `pants=${pants.length} trousers=${trousers.length}`);
+  }
 } catch (e) {
   step('unexpected exception', false, e.message);
 }
