@@ -58,12 +58,12 @@
       ],
     },
     {
-      title: 'Pants',
+      title: 'Trousers',
       href: 'shop.html?category=pants',
       items: [
-        { label: 'Dress Pants', href: 'shop.html?category=pants&subcategory=dress-pants' },
+        { label: 'Dress Trousers', href: 'shop.html?category=pants&subcategory=dress-pants' },
         { label: 'Chinos',      href: 'shop.html?category=pants&subcategory=chinos' },
-        { label: 'Linen Pants', href: 'shop.html?category=pants&subcategory=linen-pants' },
+        { label: 'Linen Trousers', href: 'shop.html?category=pants&subcategory=linen-pants' },
         { label: 'Shorts',      href: 'shop.html?category=pants&subcategory=shorts' },
       ],
     },
@@ -109,7 +109,7 @@
     ['Collections'],
     ['Suits', 'Mandarin Collar Suits & Vests'],
     ['Shirts', 'Coats'],
-    ['Pants', 'Jackets & Blazers'],
+    ['Trousers', 'Jackets & Blazers'],
     ['Accessories', 'Meet with us', 'About us'],
   ];
 

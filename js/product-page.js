@@ -10,6 +10,8 @@
     'mandarin-collar': 'Vest',
     'accessories': 'Accessory',
   };
+  // Breadcrumb category labels that differ from the slug title-cased form.
+  const CATEGORY_LABEL = { 'pants': 'Trousers' };
   const fmtTHB = (n) => 'THB ' + n.toLocaleString('en-US');
 
   const params = new URLSearchParams(location.search);
@@ -62,7 +64,7 @@
   }
 
   function renderBreadcrumb(d) {
-    const cat = (d.category_id || '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    const cat = CATEGORY_LABEL[d.category_id] || (d.category_id || '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     document.getElementById('crumb-leaf').innerHTML =
       `<a href="shop.html?category=${encodeURIComponent(d.category_id)}">${cat}</a><span class="sep">/</span>${d.item_type_name}`;
   }
